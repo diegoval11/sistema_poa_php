@@ -21,7 +21,24 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'unidad_id',
+        'debe_cambiar_clave',
     ];
+
+    public function unidad()
+    {
+        return $this->belongsTo(Unidad::class);
+    }
+
+    public function proyectos()
+    {
+        return $this->hasMany(PoaProyecto::class, 'user_id');
+    }
+
+    public function isAdmin() { return $this->role === 'admin'; }
+    public function isUnidad() { return $this->role === 'unidad'; }
+
 
     /**
      * The attributes that should be hidden for serialization.

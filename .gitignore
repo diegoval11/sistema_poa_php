@@ -1,3 +1,4 @@
+# Laravel Specific
 *.log
 .DS_Store
 .env
@@ -13,12 +14,55 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
-/public/hot
-/public/storage
+/public
 /storage/*.key
 /storage/pail
 /vendor
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Temporary files
+/temp
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Dependencies
+node_modules/
+vendor/
+
+# Compiled Assets
+/public/hot
+/public/storage
+/public/build
+
+# Cache and logs
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*
+!storage/.gitkeep
+!storage/app/.gitkeep
+!storage/app/public/.gitkeep
+!storage/framework/.gitkeep
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep
+!storage/logs/.gitkeep
+
+# Testing
+.phpunit.cache
+phpunit.result.cache
+
+# NPM
+npm-debug.log
+yarn-error.log
