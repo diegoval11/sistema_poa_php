@@ -58,21 +58,37 @@ class PoaExcelService
             $rangeU_Start = $this->currentRow;
             
             // Pasar la posición actual del template (desplazado)
-            $this->llenarActividadesNoPlanificadas($proyectoNoPlanificado, $currentUnplanTemplate);
+            // Capturamos el total de actividades reales insertadas
+            $totalUnplannedActivities = $this->llenarActividadesNoPlanificadas($proyectoNoPlanificado, $currentUnplanTemplate);
             
             $rangeU_End = $this->currentRow - 1;
+        } else {
+            $totalUnplannedActivities = 0;
         }
         
         // 6. Limpiar templates originales
-        // Remover fila 14 (template planificadas)
+        // Remover fila 14 (template planificadas) -> Todo sube 1 fila
         $this->sheet->removeRow($this->templateRowPlanificadas, 1);
         
+        // Ajustar rangos Planificados (-1)
+        // La fila 14 se borró, así que lo que estaba en 15 pasa a 14.
+        $rangeP_Start -= 1;
+        $rangeP_End -= 1;
+        
         // Remover template no planificadas
-        $finalUnplanTemplatePos = $currentUnplanTemplate - 1;
-        $this->sheet->removeRow($finalUnplanTemplatePos, 1);
+        $finalUnplanTemplatePos = $currentUnplanTemplate;
+        
+        // Ojo: $finalUnplanTemplatePos calculada con índices viejos.
+        // Como borramos 1 fila arriba, la fila real del template bajó 1 índice (índice menor).
+        $realUnplanTemplatePos = $finalUnplanTemplatePos - 1; 
+        $this->sheet->removeRow($realUnplanTemplatePos, 1);
+        
+        // Ajustar rangos No Planificados (-2 en total: 1 por P-template, 1 por U-template)
+        $rangeU_Start -= 2;
+        $rangeU_End -= 2;
         
         // 7. Actualizar Fórmulas de Resumen (80/20)
-        $this->updateSummaryFormulas($rangeP_Start, $rangeP_End, $rangeU_Start, $rangeU_End);
+        $this->updateSummaryFormulas($rangeP_Start, $rangeP_End, $rangeU_Start, $rangeU_End, $totalUnplannedActivities);
         
         return $this->spreadsheet;
     }
@@ -231,6 +247,8 @@ class PoaExcelService
             $this->sheet->setCellValue("C{$filaInicioProy}", "ACTIVIDADES NO PLANIFICADAS");
             $this->sheet->getStyle("C{$filaInicioProy}")->getAlignment()->setVertical('center');
         }
+        
+        return $num - 1;
     }
 
     /**
@@ -356,7 +374,7 @@ class PoaExcelService
      * Actualiza las fórmulas de resumen (Trimestral, Semestral, Anual, Recursos)
      * Aplicando la regla 80/20 si hay actividades no planificadas.
      */
-    protected function updateSummaryFormulas($startP, $endP, $startU, $endU)
+    protected function updateSummaryFormulas($startP, $endP, $startU, $endU, $unplannedCount)
     {
         $percentCols = ['S', 'AF', 'AG', 'AT', 'BG', 'BH', 'BI'];
         $moneyCol = 'BJ';
@@ -365,13 +383,12 @@ class PoaExcelService
         // 1. Columnas de Porcentaje (Promedios)
         // 1. Columnas de Porcentaje (Promedios)
         foreach ($percentCols as $col) {
-            if ($startU > 0 && $endU >= $startU) {
+            if ($startU > 0 && $endU >= $startU && $unplannedCount > 0) {
                 // Regla 80/20 Proporcional:
-                // Planificadas: Promedio * 0.8
-                // No Planificadas: (Actividades Cumplidas / Total Actividades No Planificadas) * 0.2
-                // Se considera "Cumplida" si valor >= 1 (100%).
-                $rows = $endU - $startU + 1;
-                $formula = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}),0)*0.8 + (COUNTIF({$col}{$startU}:{$col}{$endU}, \">=1\") / {$rows})*0.2";
+                // Planificadas: Promedio * 0.8 (Variable por Periodo)
+                // No Planificadas: (Actividades Cumplidas Anuales / Total) * 0.2 (Fijo Anual)
+                // "No importa el mes... si hay completada todo el año" -> Usamos col BI (Anual)
+                $formula = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}),0)*0.8 + (COUNTIF(BI{$startU}:BI{$endU}, \">=1\") / {$unplannedCount})*0.2";
             } else {
                 // 100% Planificadas
                 $formula = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}), 0)";

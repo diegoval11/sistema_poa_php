@@ -22,7 +22,7 @@
             </div>
             
             <!-- Exportar POA Button -->
-            <button id="btn-exportar-poa" class="btn btn-success gap-2" disabled>
+            <button id="btn-exportar-poa" class="btn bg-green-600 hover:bg-green-700 border-none text-white gap-2 shadow-md hover:shadow-lg transition-transform hover:scale-105 disabled:bg-gray-300 disabled:text-gray-500" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
