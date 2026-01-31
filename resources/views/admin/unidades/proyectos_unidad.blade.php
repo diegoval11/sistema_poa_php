@@ -2,18 +2,43 @@
 
 @section('content')
 <div class="space-y-6 pb-10 max-w-7xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
         <div>
             <h1 class="text-3xl font-bold text-congress-blue-700">{{ $titulo }}</h1>
             <p class="text-gray-500 mt-1">{{ $unidad->email }}</p>
         </div>
-        <a href="{{ route('admin.unidades.index') }}" class="btn btn-ghost">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Volver
-        </a>
+        <div class="flex flex-col md:flex-row items-stretch md:items-end gap-3">
+            <!-- Objetivo Estratégico Dropdown -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Objetivo Estratégico <span class="text-error">*</span></span>
+                </label>
+                <select id="objetivo-estrategico" class="select select-bordered w-full md:w-80" required>
+                    <option value="">Seleccione un objetivo...</option>
+                    @foreach($objetivos as $objetivo)
+                        <option value="{{ $objetivo->id }}">{{ Str::limit($objetivo->description, 80) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <!-- Exportar POA Button -->
+            <button id="btn-exportar-poa" class="btn btn-success gap-2" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Exportar POA Excel
+            </button>
+            
+            <a href="{{ route('admin.unidades.index') }}" class="btn btn-ghost">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Volver
+            </a>
+        </div>
     </div>
 
     {{-- Success Message --}}
@@ -121,4 +146,23 @@
         </div>
     </div>
 </div>
+
+<script>
+    //JavaScript for objective selection and POA export
+    const selectObjetivo = document.getElementById('objetivo-estrategico');
+    const btnExportar = document.getElementById('btn-exportar-poa');
+    
+    selectObjetivo.addEventListener('change', function() {
+        btnExportar.disabled = !this.value;
+    });
+    
+    btnExportar.addEventListener('click', function() {
+        const objetivoId = selectObjetivo.value;
+        if (!objetivoId) {
+            alert('Debe seleccionar un objetivo estratégico');
+            return;
+        }
+        window.location.href = `{{ route('admin.unidades.exportar-poa', $unidad->id) }}?objetivo_estrategico_id=${objetivoId}`;
+    });
+</script>
 @endsection

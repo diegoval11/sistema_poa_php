@@ -138,6 +138,7 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('unidades')->name('admin.unidades.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\UnidadController::class, 'index'])->name('index');
             Route::get('/{id}/proyectos', [\App\Http\Controllers\Admin\UnidadController::class, 'proyectos'])->name('proyectos');
+            Route::get('/{id}/exportar-poa', [\App\Http\Controllers\Admin\UnidadController::class, 'exportPoaExcel'])->name('exportar-poa');
         });
 
         // Estadísticas
@@ -155,6 +156,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Admin\ProyectoAdminController::class, 'detalle'])->name('detalle');
             Route::post('/{id}/aprobar', [\App\Http\Controllers\Admin\ProyectoAdminController::class, 'aprobar'])->name('aprobar');
             Route::post('/{id}/rechazar', [\App\Http\Controllers\Admin\ProyectoAdminController::class, 'rechazar'])->name('rechazar');
+            Route::get('/{id}/export-excel', [\App\Http\Controllers\Admin\ProyectoAdminController::class, 'exportExcel'])->name('export.excel');
+            Route::get('/{id}/export-pdf', [\App\Http\Controllers\Admin\ProyectoAdminController::class, 'exportPdf'])->name('export.pdf');
         });
 
         // Panel Avanzado

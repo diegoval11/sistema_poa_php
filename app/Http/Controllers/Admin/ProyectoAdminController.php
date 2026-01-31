@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\PoaProyecto;
 use App\Models\PoaActividad;
 use App\Models\PoaEvidencia;
+use App\Exports\ProyectoDetalladoExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProyectoAdminController extends Controller
 {
@@ -96,5 +99,65 @@ class ProyectoAdminController extends Controller
         return redirect()
             ->route('admin.unidades.proyectos', $proyecto->user_id)
             ->with('success', 'Proyecto "' . $proyecto->nombre . '" rechazado.');
+    }
+    
+    /**
+     * Export proyecto detallado a Excel
+     */
+    public function exportExcel($proyectoId)
+    {
+        $proyecto = PoaProyecto::with([
+            'unidad.unidad',
+            'metas.actividades.programaciones',
+            'metas.actividades.evidencias'
+        ])->findOrFail($proyectoId);
+        
+        $fechaGeneracion = now()->format('d/m/Y H:i');
+        $fileName = 'POA_Detallado_' . str_replace(' ', '_', $proyecto->unidad->unidad->nombre) . '_' . $proyecto->anio . '_' . now()->format('Ymd') . '.xlsx';
+        
+        return Excel::download(
+            new ProyectoDetalladoExport($proyecto, $fechaGeneracion),
+            $fileName
+        );
+    }
+    
+    /**
+     * Export proyecto detallado a PDF
+     */
+    public function exportPdf($proyectoId)
+    {
+        $proyecto = PoaProyecto::with([
+            'unidad.unidad',
+            'metas.actividades.programaciones',
+            'metas.actividades.evidencias'
+        ])->findOrFail($proyectoId);
+        
+        $fechaGeneracion = now()->format('d/m/Y H:i');
+        $fileName = 'POA_Detallado_' . str_replace(' ', '_', $proyecto->unidad->unidad->nombre) . '_' . $proyecto->anio . '_' . now()->format('Ymd') . '.pdf';
+        
+        // Calculate statistics
+        $totalMetas = $proyecto->metas->count();
+        $totalActividades = $proyecto->metas->sum(function($meta) {
+            return $meta->actividades->count();
+        });
+        $presupuestoTotal = $proyecto->metas->sum(function($meta) {
+            return $meta->actividades->sum('costo_estimado');
+        });
+        $totalEvidencias = $proyecto->metas->sum(function($meta) {
+            return $meta->actividades->sum(function($actividad) {
+                return $actividad->evidencias->count();
+            });
+        });
+        
+        $pdf = Pdf::loadView('admin.proyectos.proyecto_detallado', [
+            'proyecto' => $proyecto,
+            'fechaGeneracion' => $fechaGeneracion,
+            'totalMetas' => $totalMetas,
+            'totalActividades' => $totalActividades,
+            'presupuestoTotal' => $presupuestoTotal,
+            'totalEvidencias' => $totalEvidencias,
+        ])->setPaper('letter');
+        
+        return $pdf->download($fileName);
     }
 }
