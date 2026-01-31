@@ -41,6 +41,12 @@ class PoaExcelService
         $endRowPlanificadas = $this->currentRow;
         $totalPlanificadas = $endRowPlanificadas - $startRowPlanificadas;
         
+        // Rangos para Fórmulas de Resumen
+        $rangeP_Start = $startRowPlanificadas;
+        $rangeP_End = $endRowPlanificadas - 1;
+        $rangeU_Start = 0;
+        $rangeU_End = 0;
+        
         // 5. Llenar actividades no planificadas
         // La template de no planificadas está originalmente en 16.
         // Pero al insertar filas planificadas, se desplazó abajo por $totalPlanificadas.
@@ -49,7 +55,12 @@ class PoaExcelService
         if ($proyectoNoPlanificado) {
             // Iniciar inserción después del template
             $this->currentRow = $currentUnplanTemplate + 1;
+            $rangeU_Start = $this->currentRow;
+            
+            // Pasar la posición actual del template (desplazado)
             $this->llenarActividadesNoPlanificadas($proyectoNoPlanificado, $currentUnplanTemplate);
+            
+            $rangeU_End = $this->currentRow - 1;
         }
         
         // 6. Limpiar templates originales
@@ -57,9 +68,11 @@ class PoaExcelService
         $this->sheet->removeRow($this->templateRowPlanificadas, 1);
         
         // Remover template no planificadas
-        // Ahora está en $currentUnplanTemplate - 1 (porque borramos 1 fila arriba)
         $finalUnplanTemplatePos = $currentUnplanTemplate - 1;
         $this->sheet->removeRow($finalUnplanTemplatePos, 1);
+        
+        // 7. Actualizar Fórmulas de Resumen (80/20)
+        $this->updateSummaryFormulas($rangeP_Start, $rangeP_End, $rangeU_Start, $rangeU_End);
         
         return $this->spreadsheet;
     }
@@ -163,6 +176,40 @@ class PoaExcelService
             foreach ($meta->actividades as $actividad) {
                 // SIEMPRE insertar fila clonada desde el template
                 $this->insertarFilaClonada($this->currentRow, $templateRow);
+                
+                // --- SOBRESCRIBIR FÓRMULAS PARA NO PLANIFICADAS ---
+                // Las fórmulas originales fallan porque "Programado" es 0.
+                // Usamos lógica: Si Realizado > 0 -> 100%
+                
+                $row = $this->currentRow;
+                $map = [
+                    'H' => 'I', 'L' => 'M', 'P' => 'Q', // Q1
+                    'U' => 'V', 'Y' => 'Z', 'AC' => 'AD', // Q2
+                    'AH' => 'AI', 'AL' => 'AM', 'AP' => 'AQ', // Q3
+                    'AU' => 'AV', 'AY' => 'AZ', 'BC' => 'BD'  // Q4
+                ];
+                
+                // 1. Mensuales
+                foreach ($map as $colReal => $colCumpl) {
+                    $this->sheet->setCellValue("{$colCumpl}{$row}", "=IF({$colReal}{$row}>0, 1, 0)");
+                }
+                
+                // 2. Trimestrales, Semestrales, Anual (Checks de > 0)
+                // Q1: S -> H, L, P
+                $this->sheet->setCellValue("S{$row}", "=IF(SUM(H{$row},L{$row},P{$row})>0, 1, 0)");
+                // Q2: AF -> U, Y, AC
+                $this->sheet->setCellValue("AF{$row}", "=IF(SUM(U{$row},Y{$row},AC{$row})>0, 1, 0)");
+                // S1: AG -> (Q1 + Q2)
+                $this->sheet->setCellValue("AG{$row}", "=IF(SUM(H{$row},L{$row},P{$row},U{$row},Y{$row},AC{$row})>0, 1, 0)");
+                // Q3: AT -> AH, AL, AP
+                $this->sheet->setCellValue("AT{$row}", "=IF(SUM(AH{$row},AL{$row},AP{$row})>0, 1, 0)");
+                // Q4: BG -> AU, AY, BC
+                $this->sheet->setCellValue("BG{$row}", "=IF(SUM(AU{$row},AY{$row},BC{$row})>0, 1, 0)");
+                // S2: BH -> (Q3 + Q4)
+                $this->sheet->setCellValue("BH{$row}", "=IF(SUM(AH{$row},AL{$row},AP{$row},AU{$row},AY{$row},BC{$row})>0, 1, 0)");
+                // Anual: BI -> All
+                $allCols = implode("{$row},", array_keys($map)) . "{$row}";
+                $this->sheet->setCellValue("BI{$row}", "=IF(SUM({$allCols})>0, 1, 0)");
                 
                 $this->llenarFilaActividad($actividad, $num);
                 
@@ -304,5 +351,40 @@ class PoaExcelService
         $writer = new Xlsx($this->spreadsheet);
         $writer->save('php://output');
         exit;
+    }
+    /**
+     * Actualiza las fórmulas de resumen (Trimestral, Semestral, Anual, Recursos)
+     * Aplicando la regla 80/20 si hay actividades no planificadas.
+     */
+    protected function updateSummaryFormulas($startP, $endP, $startU, $endU)
+    {
+        $percentCols = ['S', 'AF', 'AG', 'AT', 'BG', 'BH', 'BI'];
+        $moneyCol = 'BJ';
+        $row = 12; // Fila de resumen
+
+        // 1. Columnas de Porcentaje (Promedios)
+        // 1. Columnas de Porcentaje (Promedios)
+        foreach ($percentCols as $col) {
+            if ($startU > 0 && $endU >= $startU) {
+                // Regla 80/20 Proporcional:
+                // Planificadas: Promedio * 0.8
+                // No Planificadas: (Actividades Cumplidas / Total Actividades No Planificadas) * 0.2
+                // Se considera "Cumplida" si valor >= 1 (100%).
+                $rows = $endU - $startU + 1;
+                $formula = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}),0)*0.8 + (COUNTIF({$col}{$startU}:{$col}{$endU}, \">=1\") / {$rows})*0.2";
+            } else {
+                // 100% Planificadas
+                $formula = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}), 0)";
+            }
+            $this->sheet->setCellValue("{$col}{$row}", $formula);
+        }
+
+        // 2. Columna de Recursos (Suma)
+        if ($startU > 0 && $endU > 0) {
+            $formulaMoney = "=IFERROR(SUM({$moneyCol}{$startP}:{$moneyCol}{$endP}) + SUM({$moneyCol}{$startU}:{$moneyCol}{$endU}), 0)";
+        } else {
+            $formulaMoney = "=IFERROR(SUM({$moneyCol}{$startP}:{$moneyCol}{$endP}), 0)";
+        }
+        $this->sheet->setCellValue("{$moneyCol}{$row}", $formulaMoney);
     }
 }
