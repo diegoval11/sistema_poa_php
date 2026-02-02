@@ -1,9 +1,9 @@
 # Sistema de POA | Alcaldía Municipal de Santa Ana
 
 ![PHP-8.2](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)
-![Laravel-12](https://img.shields.io/badge/Laravel-12.47-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![Laravel-11](https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.17-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 
 ## Descripción del Proyecto
 
@@ -25,7 +25,7 @@ Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
 1.  **Clonar el repositorio**
     
     ```bash
-    git clone https://github.com/tu-usuario/sistema-poa.git
+    git clone [https://github.com/tu-usuario/sistema-poa.git](https://github.com/tu-usuario/sistema-poa.git)
     cd sistema-poa
     ```
     
@@ -51,10 +51,10 @@ Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
 
 4.  **Configurar Base de Datos**
     
-    Abre el archivo `.env` y configura tus credenciales de base de datos (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`). Luego, ejecuta las migraciones para crear las tablas:
+    Abre el archivo `.env` y configura tus credenciales de base de datos (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`). Luego, ejecuta las migraciones y los seeders para crear las tablas y usuarios base:
     
     ```bash
-    php artisan migrate
+    php artisan migrate --seed
     ```
     
 
@@ -98,34 +98,30 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-### 2. Compilación de Assets para Producción
-
+2. Compilación de Assets para Producción
 Asegúrate de compilar los estilos y scripts minificados.
 
-```bash
+
+```
+bash
 npm run build
 ```
-
-### 3. Permisos de Carpetas
-
+3. Permisos de Carpetas
 Asegúrate de que el servidor web (Nginx/Apache) tenga permisos de escritura sobre las carpetas de almacenamiento y caché.
 
-```bash
+```
+Bash
+
 chmod -R 775 storage bootstrap/cache
+
 chown -R www-data:www-data storage bootstrap/cache
 ```
+4. Configuración del Servidor Web
+Es crucial que tu servidor web apunte directamente a la carpeta /public del proyecto como su raíz (Document Root). Esto asegura que los archivos del sistema no sean accesibles públicamente.
 
-### 4. Configuración del Servidor Web
+👤 Usuarios por Defecto
+Al ejecutar el comando de migración con seed (migrate --seed), se crearán las siguientes credenciales de acceso:
 
-Es crucial que tu servidor web apunte directamente a la carpeta `/public` del proyecto como su raíz (Document Root). Esto asegura que los archivos del sistema no sean accesibles públicamente.
+Administrador: admin@alcaldia.gob.sv / password
 
-## 👤 Usuarios por Defecto
-
-Si has ejecutado los seeders (`php artisan db:seed`), puedes utilizar las siguientes credenciales para acceder:
-
--   **Administrador**: `admin@alcaldia.gob.sv` / `password`
--   **Unidad de Prueba**: `unidad@alcaldia.gob.sv` / `password`
-
----
-
-Desarrollado para la **Alcaldía Municipal de Santa Ana**.
+Unidad de Prueba: unidad@alcaldia.gob.sv / password
