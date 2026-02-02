@@ -20,19 +20,17 @@ class PoaExcelService
      */
     public function generarExcel($unidad, $proyectos, $proyectoNoPlanificado, $objetivoEstrategico, $anio)
     {
-        // 1. Cargar la plantilla
+        // Load the Excel template and prepare the worksheet
         $templatePath = storage_path('app/plantilla/Formulas.xlsx');
         $this->spreadsheet = IOFactory::load($templatePath);
         $this->sheet = $this->spreadsheet->getActiveSheet();
         
-        // 2. Limpiar datos de ejemplo y configurar punteros
+        // Clear example data and update header information
         $this->cleanTemplate();
-        
-        // 3. Llenar encabezados
         $this->llenarEncabezados($unidad, $objetivoEstrategico, $anio);
         
-        // 4. Llenar actividades planificadas
-        // Iniciamos inserción en fila 15 (después del template en 14)
+        // Process planned activities
+        // Start insertion after the template row
         $this->currentRow = $this->templateRowPlanificadas + 1;
         $startRowPlanificadas = $this->currentRow;
         
@@ -41,24 +39,20 @@ class PoaExcelService
         $endRowPlanificadas = $this->currentRow;
         $totalPlanificadas = $endRowPlanificadas - $startRowPlanificadas;
         
-        // Rangos para Fórmulas de Resumen
+        // Define ranges for summary formulas
         $rangeP_Start = $startRowPlanificadas;
         $rangeP_End = $endRowPlanificadas - 1;
         $rangeU_Start = 0;
         $rangeU_End = 0;
         
-        // 5. Llenar actividades no planificadas
-        // La template de no planificadas está originalmente en 16.
-        // Pero al insertar filas planificadas, se desplazó abajo por $totalPlanificadas.
+        // Process unplanned activities if they exist.
+        // The unplanned template position shifts due to the inserted planned activities.
         $currentUnplanTemplate = $this->templateRowNoPlanificadas + $totalPlanificadas;
         
         if ($proyectoNoPlanificado) {
-            // Iniciar inserción después del template
             $this->currentRow = $currentUnplanTemplate + 1;
             $rangeU_Start = $this->currentRow;
             
-            // Pasar la posición actual del template (desplazado)
-            // Capturamos el total de actividades reales insertadas
             $totalUnplannedActivities = $this->llenarActividadesNoPlanificadas($proyectoNoPlanificado, $currentUnplanTemplate);
             
             $rangeU_End = $this->currentRow - 1;
@@ -66,28 +60,25 @@ class PoaExcelService
             $totalUnplannedActivities = 0;
         }
         
-        // 6. Limpiar templates originales
-        // Remover fila 14 (template planificadas) -> Todo sube 1 fila
+        // Final cleanup: Remove original template rows
         $this->sheet->removeRow($this->templateRowPlanificadas, 1);
         
-        // Ajustar rangos Planificados (-1)
-        // La fila 14 se borró, así que lo que estaba en 15 pasa a 14.
+        // Adjust planned ranges (shifted up by 1)
         $rangeP_Start -= 1;
         $rangeP_End -= 1;
         
-        // Remover template no planificadas
+        // Remove unplanned template
         $finalUnplanTemplatePos = $currentUnplanTemplate;
         
-        // Ojo: $finalUnplanTemplatePos calculada con índices viejos.
-        // Como borramos 1 fila arriba, la fila real del template bajó 1 índice (índice menor).
+        // Calculate real position after previous deletion
         $realUnplanTemplatePos = $finalUnplanTemplatePos - 1; 
         $this->sheet->removeRow($realUnplanTemplatePos, 1);
         
-        // Ajustar rangos No Planificados (-2 en total: 1 por P-template, 1 por U-template)
+        // Adjust unplanned ranges (shifted up by 2 total)
         $rangeU_Start -= 2;
         $rangeU_End -= 2;
         
-        // 7. Actualizar Fórmulas de Resumen (80/20)
+        // Update summary formulas with the valid ranges
         $this->updateSummaryFormulas($rangeP_Start, $rangeP_End, $rangeU_Start, $rangeU_End, $totalUnplannedActivities);
         
         return $this->spreadsheet;
@@ -193,9 +184,8 @@ class PoaExcelService
                 // SIEMPRE insertar fila clonada desde el template
                 $this->insertarFilaClonada($this->currentRow, $templateRow);
                 
-                // --- SOBRESCRIBIR FÓRMULAS PARA NO PLANIFICADAS ---
-                // Las fórmulas originales fallan porque "Programado" es 0.
-                // Usamos lógica: Si Realizado > 0 -> 100%
+                // Override formulas for unplanned activities since 'Programado' is 0.
+                // Logic: If Executed > 0, then 100% compliance.
                 
                 $row = $this->currentRow;
                 $map = [
@@ -384,10 +374,9 @@ class PoaExcelService
         // 1. Columnas de Porcentaje (Promedios)
         foreach ($percentCols as $col) {
             if ($startU > 0 && $endU >= $startU && $unplannedCount > 0) {
-                // Regla 80/20 Proporcional:
-                // Planificadas: Promedio * 0.8 (Variable por Periodo)
-                // No Planificadas: (Actividades Cumplidas Anuales / Total) * 0.2 (Fijo Anual)
-                // "No importa el mes... si hay completada todo el año" -> Usamos col BI (Anual)
+                // Proportional 80/20 Rule:
+                // Planned: Average * 0.8
+                // Unplanned: (Annual Completed Count / Total Unplanned) * 0.2
                 $formula = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}),0)*0.8 + (COUNTIF(BI{$startU}:BI{$endU}, \">=1\") / {$unplannedCount})*0.2";
             } else {
                 // 100% Planificadas

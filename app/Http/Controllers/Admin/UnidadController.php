@@ -18,7 +18,7 @@ class UnidadController extends Controller
     {
         $busqueda = $request->get('buscar', '');
         
-        // OPTIMIZED: Deep eager loading to prevent N+1 query problem
+        // Eager load relationships with depth to optimize performance and avoid N+1 issues when iterating projects.
         $query = User::where('role', 'unidad')
             ->with(['unidad', 'proyectos' => function($q) {
                 $q->where('estado', 'APROBADO')
@@ -35,7 +35,7 @@ class UnidadController extends Controller
             });
         }
         
-        // Add annotations for total_proyectos and count_proyectos_aprobados
+        // Load aggregate counts for projects to display summary statistics without loading all models.
         $query->withCount([
             'proyectos as total_proyectos',
             'proyectos as count_proyectos_aprobados' => function($q) {
@@ -45,9 +45,8 @@ class UnidadController extends Controller
         
         $unidades = $query->paginate(15);
         
-        // Calculate performance in-memory using Laravel Collections
-        // UNIFIED METHOD: Group by activity, calculate % per activity, then average
-        // Based on Django reference implementation
+        // Calculate performance metrics based on activity execution vs programming.
+        // This logic aggregates percentages at the activity level before averaging for the unit.
         foreach ($unidades as $user) {
             $sumaCumplimientos = 0;
             $countActividades = 0;
@@ -55,13 +54,8 @@ class UnidadController extends Controller
             foreach ($user->proyectos as $proyecto) {
                 foreach ($proyecto->metas as $meta) {
                     foreach ($meta->actividades as $actividad) {
-                        // CRITICAL: Skip unplanned activities
-                        if ($actividad->es_no_planificada) {
-                            continue;
-                        }
-                        
-                        // CRITICAL: Only consider quantifiable activities
-                        if (!$actividad->es_cuantificable) {
+                        // Filter valid activities for performance calculation
+                        if ($actividad->es_no_planificada || !$actividad->es_cuantificable) {
                             continue;
                         }
                         

@@ -26,7 +26,7 @@ class ProyectoAdminController extends Controller
             'metas.actividades.evidencias'
         ])->findOrFail($proyectoId);
         
-        // Calculate statistics
+        // Compute project metrics for the view
         $total_actividades = PoaActividad::whereHas('meta', function($q) use ($proyectoId) {
             $q->where('poa_proyecto_id', $proyectoId);
         })->count();
@@ -55,7 +55,7 @@ class ProyectoAdminController extends Controller
     {
         $proyecto = PoaProyecto::findOrFail($proyectoId);
         
-        // CRITICAL: Prevent race conditions
+        // Ensure the project is in the correct state before approval to prevent race conditions or duplicate processing.
         abort_if($proyecto->estado !== 'ENVIADO', 400, 'El proyecto ya fue procesado');
         
         $proyecto->estado = 'APROBADO';
@@ -63,7 +63,7 @@ class ProyectoAdminController extends Controller
         $proyecto->fecha_aprobacion = now();
         $proyecto->save();
         
-        // Invalidar caché del Panel Avanzado
+        // Invalidate cache to ensure the Dashboard reflects the new project status immediately.
         \Illuminate\Support\Facades\Cache::flush();
         
         return redirect()
@@ -78,7 +78,7 @@ class ProyectoAdminController extends Controller
     {
         $proyecto = PoaProyecto::findOrFail($proyectoId);
         
-        // CRITICAL: Prevent race conditions
+        // Ensure the project is in the correct state before rejection.
         abort_if($proyecto->estado !== 'ENVIADO', 400, 'El proyecto ya fue procesado');
         
         // Validate motivo_rechazo is required
@@ -93,7 +93,7 @@ class ProyectoAdminController extends Controller
         $proyecto->motivo_rechazo = $request->motivo_rechazo;
         $proyecto->save();
         
-        // Invalidar caché del Panel Avanzado
+        // Invalidate cache to reflect changes.
         \Illuminate\Support\Facades\Cache::flush();
         
         return redirect()
@@ -135,7 +135,7 @@ class ProyectoAdminController extends Controller
         $fechaGeneracion = now()->format('d/m/Y H:i');
         $fileName = 'POA_Detallado_' . str_replace(' ', '_', $proyecto->unidad->unidad->nombre) . '_' . $proyecto->anio . '_' . now()->format('Ymd') . '.pdf';
         
-        // Calculate statistics
+        // Aggregate project statistics for the PDF report
         $totalMetas = $proyecto->metas->count();
         $totalActividades = $proyecto->metas->sum(function($meta) {
             return $meta->actividades->count();

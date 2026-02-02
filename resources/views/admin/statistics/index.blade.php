@@ -37,7 +37,7 @@
         
         {{-- Tab 1: Cumplimiento por Unidad --}}
         <div id="cumplimiento" class="tab-pane block space-y-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 gap-8">
                 {{-- Top Units --}}
                 <div class="card bg-base-100 shadow-xl border border-gray-100">
                     <div class="card-body">
@@ -53,20 +53,7 @@
                     </div>
                 </div>
 
-                {{-- Bottom Units --}}
-                <div class="card bg-base-100 shadow-xl border border-gray-100">
-                    <div class="card-body">
-                        <h2 class="card-title text-error mb-4 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                            </svg>
-                            Menor Desempeño
-                        </h2>
-                        <div class="h-96 w-full">
-                            <canvas id="bottomChart"></canvas>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
 
@@ -185,7 +172,7 @@
 
     // Initialization Functions
     function initCumplimientoCharts() {
-        if (charts.top || charts.bottom) return; // Already initialized
+        if (charts.top) return; // Already initialized
 
         const barOptions = {
             ...commonOptions,
@@ -209,20 +196,7 @@
             options: barOptions
         });
 
-        charts.bottom = new Chart(document.getElementById('bottomChart'), {
-            type: 'bar',
-            data: {
-                labels: bottomUnits.map(u => u.nombre),
-                datasets: [{
-                    data: bottomUnits.map(u => u.cumplimiento),
-                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                    borderColor: 'rgb(239, 68, 68)',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: barOptions
-        });
+
     }
 
     function initStatusChart() {

@@ -78,8 +78,7 @@ class ExportController extends Controller
 
     /**
      * Get all units with their overall performance and categorization
-     * UNIFIED CALCULATION: Group by activity, calculate % per activity, then average
-     * Based on Django reference implementation
+     * Standardized performance metric calculation: Group by activity, calculate % per activity, then average.
      */
     private function getUnidadesConRendimiento()
     {
@@ -102,13 +101,8 @@ class ExportController extends Controller
             foreach ($user->proyectos as $proyecto) {
                 foreach ($proyecto->metas as $meta) {
                     foreach ($meta->actividades as $actividad) {
-                        // CRITICAL: Skip unplanned activities
-                        if ($actividad->es_no_planificada) {
-                            continue;
-                        }
-                        
-                        // CRITICAL: Only consider quantifiable activities
-                        if (!$actividad->es_cuantificable) {
+                        // Filter valid activities for performance calculation
+                        if ($actividad->es_no_planificada || !$actividad->es_cuantificable) {
                             continue;
                         }
                         

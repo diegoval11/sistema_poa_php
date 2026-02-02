@@ -70,8 +70,8 @@
         }
         
         table th {
-            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
-            color: white;
+            background-color: #ffffff;
+            color: #1e40af;
             border: 1px solid #1e40af;
             padding: 8px 6px;
             text-align: center;

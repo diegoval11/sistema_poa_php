@@ -1,59 +1,131 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de POA | Alcaldía Municipal de Santa Ana
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+![PHP-8.2](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![Laravel-12](https://img.shields.io/badge/Laravel-12.47-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.17-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 
-## About Laravel
+## Descripción del Proyecto
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+El **Sistema de POA** es una plataforma integral desarrollada para la **Alcaldía Municipal de Santa Ana**, diseñada para optimizar y centralizar la gestión del Plan Operativo Anual. Esta herramienta permite a las unidades organizativas registrar, planificar y dar seguimiento a sus metas, actividades y presupuestos, mientras que proporciona a los administradores una visión global del desempeño institucional a través de reportes avanzados y tableros de control.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requisitos del Servidor
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Para ejecutar este proyecto, asegúrate de que tu servidor cumpla con los siguientes requisitos:
 
-## Learning Laravel
+-   **PHP**: Versión 8.2 o superior.
+-   **Composer**: Para la gestión de dependencias de PHP.
+-   **Node.js y NPM**: Para la compilación de assets de frontend.
+-   **Base de Datos**: MySQL 8.0, MariaDB o equivalente.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Instalación Local (Paso a Paso)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
 
-## Laravel Sponsors
+1.  **Clonar el repositorio**
+    
+    ```bash
+    git clone https://github.com/tu-usuario/sistema-poa.git
+    cd sistema-poa
+    ```
+    
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2.  **Instalar dependencias de Backend**
+    
+    Descarga e instala las librerías necesarias de Laravel utilizando Composer.
+    
+    ```bash
+    composer install
+    ```
+    
 
-### Premium Partners
+3.  **Configurar Variables de Entorno y Clave de Aplicación**
+    
+    Copia el archivo de configuración de ejemplo y genera una nueva clave de encriptación.
+    
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+    ```
+    
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+4.  **Configurar Base de Datos**
+    
+    Abre el archivo `.env` y configura tus credenciales de base de datos (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`). Luego, ejecuta las migraciones para crear las tablas:
+    
+    ```bash
+    php artisan migrate
+    ```
+    
 
-## Contributing
+5.  **Instalar y Compilar Frontend**
+    
+    Este proyecto utiliza Tailwind CSS, por lo que es obligatorio instalar y compilar los assets.
+    
+    ```bash
+    npm install
+    npm run build
+    ```
+    
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+6.  **Vincular el Almacenamiento (Storage)**
+    
+    Este comando es **vital** para que la carga de archivos (evidencias, documentos) funcione correctamente.
+    
+    ```bash
+    php artisan storage:link
+    ```
+    
 
-## Code of Conduct
+7.  **Iniciar Servidor Local**
+    
+    ```bash
+    php artisan serve
+    ```
+    
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Guía de Despliegue en Producción (Deployment)
 
-## Security Vulnerabilities
+Para desplegar la aplicación en un entorno productivo, sigue estas recomendaciones adicionales para garantizar rendimiento y seguridad:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 1. Optimización de Carga
 
-## License
+Ejecuta los siguientes comandos para cachear la configuración, rutas y vistas. Esto mejora significativamente la velocidad de respuesta.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### 2. Compilación de Assets para Producción
+
+Asegúrate de compilar los estilos y scripts minificados.
+
+```bash
+npm run build
+```
+
+### 3. Permisos de Carpetas
+
+Asegúrate de que el servidor web (Nginx/Apache) tenga permisos de escritura sobre las carpetas de almacenamiento y caché.
+
+```bash
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+```
+
+### 4. Configuración del Servidor Web
+
+Es crucial que tu servidor web apunte directamente a la carpeta `/public` del proyecto como su raíz (Document Root). Esto asegura que los archivos del sistema no sean accesibles públicamente.
+
+## 👤 Usuarios por Defecto
+
+Si has ejecutado los seeders (`php artisan db:seed`), puedes utilizar las siguientes credenciales para acceder:
+
+-   **Administrador**: `admin@alcaldia.gob.sv` / `password`
+-   **Unidad de Prueba**: `unidad@alcaldia.gob.sv` / `password`
+
+---
+
+Desarrollado para la **Alcaldía Municipal de Santa Ana**.
