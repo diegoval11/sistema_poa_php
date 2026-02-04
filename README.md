@@ -127,4 +127,3 @@ Al ejecutar el comando de migración con seed (migrate --seed), se crearán las 
 
 Administrador: admin@alcaldia.gob.sv / password
 
-Unidad de Prueba: unidad@alcaldia.gob.sv / password
