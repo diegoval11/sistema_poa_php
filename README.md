@@ -26,7 +26,7 @@ Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
     
     ```bash
     git clone [https://github.com/tu-usuario/sistema-poa.git](https://github.com/tu-usuario/sistema-poa.git)
-    cd sistema-poa
+    cd sistema_poa_php_main
     ```
     
 
