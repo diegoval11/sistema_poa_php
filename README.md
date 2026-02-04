@@ -55,6 +55,9 @@ Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
     
     ```bash
     php artisan migrate --seed
+    
+    Para crear las unidades automaticamente ejecutar:
+    php artisan db:seed --class=UnidadesSeeder --force
     ```
     
 
