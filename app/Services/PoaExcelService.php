@@ -116,7 +116,8 @@ class PoaExcelService
         $this->sheet->setCellValue('C5', "UNIDAD: " . strtoupper($unidad->unidad->nombre));
         
         // C6: OBJETIVO ESTRATÉGICO
-        $this->sheet->setCellValue('C6', "OBJETIVO ESTRATÉGICO: " . $objetivoEstrategico->description);
+        $descripcionObjetivo = $objetivoEstrategico ? $objetivoEstrategico->description : '';
+        $this->sheet->setCellValue('C6', "OBJETIVO ESTRATÉGICO: " . $descripcionObjetivo);
         
         // C7: OBJETIVO DE LA UNIDAD
         $objetivos = "";

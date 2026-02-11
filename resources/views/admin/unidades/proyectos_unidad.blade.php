@@ -11,10 +11,10 @@
             <!-- Objetivo Estratégico Dropdown -->
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text font-semibold">Objetivo Estratégico <span class="text-error">*</span></span>
+                    <span class="label-text font-semibold">Objetivo Estratégico</span>
                 </label>
-                <select id="objetivo-estrategico" class="select select-bordered w-full md:w-80" required>
-                    <option value="">Seleccione un objetivo...</option>
+                <select id="objetivo-estrategico" class="select select-bordered w-full md:w-80">
+                    <option value="">Seleccione un objetivo (Opcional)...</option>
                     @foreach($objetivos as $objetivo)
                         <option value="{{ $objetivo->id }}">{{ Str::limit($objetivo->description, 80) }}</option>
                     @endforeach
@@ -22,7 +22,7 @@
             </div>
             
             <!-- Exportar POA Button -->
-            <button id="btn-exportar-poa" class="btn bg-green-600 hover:bg-green-700 border-none text-white gap-2 shadow-md hover:shadow-lg transition-transform hover:scale-105 disabled:bg-gray-300 disabled:text-gray-500" disabled>
+            <button id="btn-exportar-poa" class="btn bg-green-600 hover:bg-green-700 border-none text-white gap-2 shadow-md hover:shadow-lg transition-transform hover:scale-105">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -152,17 +152,18 @@
     const selectObjetivo = document.getElementById('objetivo-estrategico');
     const btnExportar = document.getElementById('btn-exportar-poa');
     
-    selectObjetivo.addEventListener('change', function() {
-        btnExportar.disabled = !this.value;
-    });
+    // No longer needed to disable button based on selection
     
     btnExportar.addEventListener('click', function() {
         const objetivoId = selectObjetivo.value;
-        if (!objetivoId) {
-            alert('Debe seleccionar un objetivo estratégico');
-            return;
+        // Allow empty objectiveId
+        
+        let url = `{{ route('admin.unidades.exportar-poa', $unidad->id) }}`;
+        if (objetivoId) {
+            url += `?objetivo_estrategico_id=${objetivoId}`;
         }
-        window.location.href = `{{ route('admin.unidades.exportar-poa', $unidad->id) }}?objetivo_estrategico_id=${objetivoId}`;
+        
+        window.location.href = url;
     });
 </script>
 @endsection

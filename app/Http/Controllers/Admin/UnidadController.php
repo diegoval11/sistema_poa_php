@@ -120,17 +120,19 @@ class UnidadController extends Controller
      */
     public function exportPoaExcel($unidadId, Request $request)
     {
-        // validated objetivo estratégico is required
+        // validated objetivo estratégico is optional
         $request->validate([
-            'objetivo_estrategico_id' => 'required|exists:objetivos_especificos_predeterminados,id'
+            'objetivo_estrategico_id' => 'nullable|exists:objetivos_especificos_predeterminados,id'
         ]);
         
         $unidad = User::where('role', 'unidad')
             ->with('unidad')
             ->findOrFail($unidadId);
         
-        // Get objective
-        $objetivoEstrategico = ObjetivoEspecificoPredeterminado::findOrFail($request->objetivo_estrategico_id);
+        // Get objective if provided
+        $objetivoEstrategico = $request->objetivo_estrategico_id 
+            ? ObjetivoEspecificoPredeterminado::find($request->objetivo_estrategico_id) 
+            : null;
         
         $anioActual = now()->year;
         
