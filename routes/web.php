@@ -112,11 +112,11 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('/{id}/metas', [WizardController::class, 'step2'])->name('step2');
             Route::post('/{id}/metas', [WizardController::class, 'storeMeta'])->name('storeMeta');
-            Route::post('/eliminar-meta/{id}', [WizardController::class, 'deleteMeta'])->name('deleteMeta');
+            Route::delete('/eliminar-meta/{id}', [WizardController::class, 'deleteMeta'])->name('deleteMeta');
 
             Route::get('/{id}/actividades', [WizardController::class, 'step3'])->name('step3');
             Route::post('/{id}/actividades', [WizardController::class, 'storeActividad'])->name('storeActividad');
-            Route::post('/eliminar-actividad/{id}', [WizardController::class, 'deleteActividad'])->name('deleteActividad');
+            Route::delete('/eliminar-actividad/{id}', [WizardController::class, 'deleteActividad'])->name('deleteActividad');
 
             Route::get('/{id}/programacion', [WizardController::class, 'step4'])->name('step4');
             Route::get('/{id}/resumen', [WizardController::class, 'step5'])->name('step5');
