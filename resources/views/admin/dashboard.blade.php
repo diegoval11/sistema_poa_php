@@ -6,7 +6,7 @@
     {{-- Header --}}
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
-            Administración Central - ALCALDÍA
+            Administración Central - Alcaldia Municipal de Santa Ana Centro
         </h1>
         <p class="text-gray-500 mt-1 font-medium">Panel de control del sistema POA</p>
     </div>

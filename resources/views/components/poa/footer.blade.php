@@ -3,7 +3,7 @@
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
 
             <div class="text-center md:text-left">
-                <p class="text-sm text-gray-500 font-semibold">Alcaldía Municipal de Santa Ana</p>
+                <p class="text-sm text-gray-500 font-semibold">Alcaldia Municipal de Santa Ana Centro</p>
                 <p class="text-xs text-gray-400">Departamento de Planificación y Desarrollo</p>
             </div>
 

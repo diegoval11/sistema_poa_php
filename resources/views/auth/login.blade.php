@@ -43,7 +43,7 @@
             </div>
 
             <div class="bg-gray-50 py-4 text-center border-t border-gray-100">
-                <p class="text-xs text-gray-400">&copy; {{ date('Y') }} Alcaldía Municipal - Santa Ana</p>
+                <p class="text-xs text-gray-400">&copy; {{ date('Y') }} Alcaldia Municipal de Santa Ana Centro</p>
             </div>
         </div>
     </div>

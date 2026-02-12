@@ -15,7 +15,7 @@
                         </svg>
                     </div>
                     <div class="leading-tight hidden md:block">
-                        <h1 class="font-bold text-lg tracking-wide">ALCALDÍA MUNICIPAL</h1>
+                        <h1 class="font-bold text-lg tracking-wide">ALCALDIA MUNICIPAL DE SANTA ANA CENTRO</h1>
                         <span class="text-xs text-congress-blue-200 uppercase tracking-widest">Sistema POA</span>
                     </div>
                 </a>
