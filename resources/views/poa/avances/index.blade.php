@@ -63,16 +63,17 @@
 
     {{-- Listado de Actividades --}}
     <div class="space-y-6">
+        @php $globalActividadIndex = 0; @endphp
         @foreach($proyecto->metas as $meta)
             <div class="border-l-4 border-gray-900 pl-4 mb-4">
                 <h2 class="text-gray-900 font-black text-sm uppercase tracking-widest">{{ $meta->descripcion }}</h2>
             </div>
 
-            @foreach($meta->actividades as $actividadIndex => $actividad)
+            @foreach($meta->actividades as $actividad)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
                     {{-- Header Actividad (Clickable) --}}
                     <div class="bg-gray-50 px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-200"
-                         onclick="toggleActividad({{ $actividadIndex }})">
+                         onclick="toggleActividad({{ $globalActividadIndex }})">
                         <div class="flex-1">
                             <h3 class="font-bold text-gray-800 text-sm">{{ $actividad->descripcion }}</h3>
                             <p class="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">
@@ -89,14 +90,14 @@
                                 <span class="text-[10px] font-black text-gray-400 uppercase block mb-1">Cumplimiento</span>
                                 <span class="font-black text-lg text-gray-900">{{ $actividad->porcentaje_cumplimiento }}%</span>
                             </div>
-                            <svg id="arrow-{{ $actividadIndex }}" class="w-5 h-5 text-gray-400 transition-transform transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg id="arrow-{{ $globalActividadIndex }}" class="w-5 h-5 text-gray-400 transition-transform transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
                     </div>
 
                     {{-- Tabla de Avances (Collapsible Content) --}}
-                    <div id="content-{{ $actividadIndex }}" class="hidden">
+                    <div id="content-{{ $globalActividadIndex }}" class="hidden">
                         <table class="w-full text-xs text-left">
                             <thead class="bg-gray-50 text-gray-400 uppercase font-black border-b border-gray-200">
                                 <tr>
@@ -171,6 +172,7 @@
                         </table>
                     </div>
                 </div>
+                @php $globalActividadIndex++; @endphp
             @endforeach
         @endforeach
     </div>
