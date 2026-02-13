@@ -21,15 +21,38 @@
                 </select>
             </div>
             
-            <!-- Exportar POA Button -->
-            <button id="btn-exportar-poa" class="btn bg-green-600 hover:bg-green-700 border-none text-white gap-2 shadow-md hover:shadow-lg transition-transform hover:scale-105">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Exportar POA Excel
-            </button>
+            <!-- Exportar POA Dropdown -->
+            <div class="dropdown dropdown-end">
+                <button tabindex="0" class="btn bg-green-600 hover:bg-green-700 border-none text-white gap-2 shadow-md hover:shadow-lg transition-transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Exportar POA Excel
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-56 mt-2">
+                    <li>
+                        <a id="btn-exportar-completo" class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Versión Completa
+                        </a>
+                    </li>
+                    <li>
+                        <a id="btn-exportar-resumido" class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            Versión Resumida
+                        </a>
+                    </li>
+                </ul>
+            </div>
             
             <a href="{{ route('admin.unidades.index') }}" class="btn btn-ghost">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
@@ -148,17 +171,28 @@
 </div>
 
 <script>
-    //JavaScript for objective selection and POA export
+    // JavaScript for objective selection and POA export
     const selectObjetivo = document.getElementById('objetivo-estrategico');
-    const btnExportar = document.getElementById('btn-exportar-poa');
+    const btnExportarCompleto = document.getElementById('btn-exportar-completo');
+    const btnExportarResumido = document.getElementById('btn-exportar-resumido');
     
-    // No longer needed to disable button based on selection
-    
-    btnExportar.addEventListener('click', function() {
+    // Export complete version
+    btnExportarCompleto.addEventListener('click', function() {
         const objetivoId = selectObjetivo.value;
-        // Allow empty objectiveId
         
         let url = `{{ route('admin.unidades.exportar-poa', $unidad->id) }}`;
+        if (objetivoId) {
+            url += `?objetivo_estrategico_id=${objetivoId}`;
+        }
+        
+        window.location.href = url;
+    });
+
+    // Export summarized version
+    btnExportarResumido.addEventListener('click', function() {
+        const objetivoId = selectObjetivo.value;
+        
+        let url = `{{ route('admin.unidades.exportar-poa-resumido', $unidad->id) }}`;
         if (objetivoId) {
             url += `?objetivo_estrategico_id=${objetivoId}`;
         }

@@ -112,10 +112,12 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('/{id}/metas', [WizardController::class, 'step2'])->name('step2');
             Route::post('/{id}/metas', [WizardController::class, 'storeMeta'])->name('storeMeta');
+            Route::put('/actualizar-meta/{id}', [WizardController::class, 'updateMeta'])->name('updateMeta');
             Route::delete('/eliminar-meta/{id}', [WizardController::class, 'deleteMeta'])->name('deleteMeta');
 
             Route::get('/{id}/actividades', [WizardController::class, 'step3'])->name('step3');
             Route::post('/{id}/actividades', [WizardController::class, 'storeActividad'])->name('storeActividad');
+            Route::put('/actualizar-actividad/{id}', [WizardController::class, 'updateActividad'])->name('updateActividad');
             Route::delete('/eliminar-actividad/{id}', [WizardController::class, 'deleteActividad'])->name('deleteActividad');
 
             Route::get('/{id}/programacion', [WizardController::class, 'step4'])->name('step4');
@@ -139,6 +141,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\UnidadController::class, 'index'])->name('index');
             Route::get('/{id}/proyectos', [\App\Http\Controllers\Admin\UnidadController::class, 'proyectos'])->name('proyectos');
             Route::get('/{id}/exportar-poa', [\App\Http\Controllers\Admin\UnidadController::class, 'exportPoaExcel'])->name('exportar-poa');
+            Route::get('/{id}/exportar-poa-resumido', [\App\Http\Controllers\Admin\UnidadController::class, 'exportPoaExcelResumido'])->name('exportar-poa-resumido');
         });
 
         // Estadísticas

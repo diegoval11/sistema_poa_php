@@ -130,7 +130,7 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2">
                             @if($act->es_cuantificable)
                                 <div class="text-right">
                                     <span class="block text-lg font-black text-gray-900 leading-none">{{ $act->cantidad_programada_total }}</span>
@@ -142,13 +142,23 @@
 
                             <div class="h-8 w-px bg-gray-200"></div>
 
-                            {{-- Botón Eliminar usando el Componente Modal Global --}}
-                            <button type="button"
-                                    onclick="openDeleteModal('{{ route('poa.wizard.deleteActividad', $act->id) }}')"
-                                    class="text-red-500 bg-red-50 hover:bg-red-600 hover:text-white p-2 rounded transition-colors border border-red-100"
-                                    title="Eliminar">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+                            @if($proyecto->estado === 'BORRADOR')
+                                {{-- Botón Editar --}}
+                                <button type="button"
+                                        onclick='openEditActividadModal(@json($act))'
+                                        class="text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 p-2 rounded transition-colors border border-blue-100"
+                                        title="Editar">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                </button>
+
+                                {{-- Botón Eliminar --}}
+                                <button type="button"
+                                        onclick="openDeleteModal('{{ route('poa.wizard.deleteActividad', $act->id) }}')"
+                                        class="text-red-500 bg-red-50 hover:bg-red-600 hover:text-white p-2 rounded transition-colors border border-red-100"
+                                        title="Eliminar">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @empty
@@ -186,6 +196,89 @@
 {{-- MODAL GLOBAL --}}
 <x-modals.confirm-delete />
 
+{{-- Modal Editar Actividad --}}
+<dialog id="edit_actividad_modal" class="modal">
+    <div class="modal-box bg-white rounded-xl p-0 shadow-2xl max-w-4xl">
+        <div class="px-6 py-5 border-b border-gray-200 bg-gray-50/50">
+            <h3 class="text-lg font-bold text-gray-900">Editar Actividad</h3>
+        </div>
+        <form id="edit_actividad_form" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    {{-- Descripción --}}
+                    <div class="md:col-span-8">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Descripción</label>
+                        <textarea name="descripcion" id="edit_descripcion" rows="2" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-1 focus:ring-congress-blue-600 text-sm" required></textarea>
+                    </div>
+
+                    {{-- Unidad de Medida --}}
+                    <div class="md:col-span-4">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Unidad de Medida</label>
+                        <select id="edit_unidad_select" class="w-full border-gray-300 rounded-lg px-3 py-3 text-sm focus:ring-1 focus:ring-congress-blue-600" onchange="checkEditUnidad(this)">
+                            <option value="Informe">Informe</option>
+                            <option value="Documento">Documento</option>
+                            <option value="Persona">Persona</option>
+                            <option value="Servicio">Servicio</option>
+                            <option value="Otro">Otro...</option>
+                        </select>
+                        <input type="text" name="unidad_medida" id="edit_unidad_input" class="w-full mt-2 border-gray-300 rounded-lg px-3 py-2 text-sm hidden" placeholder="Especifique...">
+                    </div>
+
+                    {{-- Checkbox Cuantificable --}}
+                    <div class="md:col-span-3">
+                        <div class="h-[46px] flex items-center bg-gray-50 rounded-lg border border-gray-300 px-4 mt-[26px]">
+                            <label class="cursor-pointer flex items-center gap-3 w-full">
+                                <input type="checkbox" name="es_cuantificable" id="edit_check_cuantificable" value="1" checked class="checkbox checkbox-sm checkbox-primary rounded border-gray-400" onchange="toggleEditCantidad(this)">
+                                <span class="text-sm font-bold text-gray-700">Cuantificable</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Cantidad Total --}}
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Cantidad Total</label>
+                        <input type="number" name="cantidad_programada_total" id="edit_input_cantidad" class="w-full border-gray-300 rounded-lg px-3 py-3 font-bold text-center text-gray-900 focus:ring-1 focus:ring-congress-blue-600" placeholder="0" min="1" step="1" required>
+                    </div>
+
+                    {{-- Costo --}}
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Total Recursos ($)</label>
+                        <div class="relative">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" name="costo_estimado" id="edit_costo_estimado" step="0.01" min="0" class="w-full border-gray-300 rounded-lg pl-7 pr-3 py-3 font-bold text-gray-900 focus:ring-1 focus:ring-congress-blue-600" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    {{-- Recursos --}}
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Detalle Recursos</label>
+                        <input type="text" name="recursos" id="edit_recursos" maxlength="500" class="w-full border-gray-300 rounded-lg px-3 py-3 text-sm focus:ring-1 focus:ring-congress-blue-600" placeholder="Ej: Fondos propios, FODES...">
+                    </div>
+
+                    {{-- Medio Verificación --}}
+                    <div class="md:col-span-12">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Medio de Verificación</label>
+                        <input type="text" name="medio_verificacion" id="edit_medio_verificacion" class="w-full border-gray-300 rounded-lg px-3 py-3 text-sm focus:ring-1 focus:ring-congress-blue-600" placeholder="Ej: Listado de asistencia, Fotografía..." required>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 rounded-b-xl border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('edit_actividad_modal').close()" class="btn bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 hover:border-gray-400 rounded-lg px-6 font-semibold shadow-sm">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn bg-congress-blue-600 hover:bg-congress-blue-700 text-white border-0 rounded-lg px-6 font-semibold shadow-lg">
+                    Actualizar
+                </button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-gray-900/20"><button>close</button></form>
+</dialog>
+
 @push('scripts')
 <script>
     function checkUnidad(select) {
@@ -213,6 +306,83 @@
         if(modal && form) {
             form.action = url;
             modal.showModal();
+        }
+    }
+
+    // Funciones para el modal de edición
+    function openEditActividadModal(actividad) {
+        const modal = document.getElementById('edit_actividad_modal');
+        const form = document.getElementById('edit_actividad_form');
+        
+        if(modal && form) {
+            // Set form action
+            form.action = `/poa/wizard/actualizar-actividad/${actividad.id}`;
+            
+            // Populate fields
+            document.getElementById('edit_descripcion').value = actividad.descripcion;
+            document.getElementById('edit_medio_verificacion').value = actividad.medio_verificacion;
+            document.getElementById('edit_costo_estimado').value = actividad.costo_estimado || 0;
+            document.getElementById('edit_recursos').value = actividad.recursos || '';
+            
+            // Handle unidad_medida
+            const unidadSelect = document.getElementById('edit_unidad_select');
+            const unidadInput = document.getElementById('edit_unidad_input');
+            const predefinedOptions = ['Informe', 'Documento', 'Persona', 'Servicio'];
+            
+            if (predefinedOptions.includes(actividad.unidad_medida)) {
+                unidadSelect.value = actividad.unidad_medida;
+                unidadInput.classList.add('hidden');
+                unidadInput.value = actividad.unidad_medida;
+            } else {
+                unidadSelect.value = 'Otro';
+                unidadInput.classList.remove('hidden');
+                unidadInput.value = actividad.unidad_medida;
+            }
+            
+            // Handle cuantificable checkbox
+            const checkCuantificable = document.getElementById('edit_check_cuantificable');
+            const inputCantidad = document.getElementById('edit_input_cantidad');
+            
+            checkCuantificable.checked = actividad.es_cuantificable;
+            if (actividad.es_cuantificable) {
+                inputCantidad.disabled = false;
+                inputCantidad.required = true;
+                inputCantidad.value = actividad.cantidad_programada_total;
+                inputCantidad.classList.remove('bg-gray-100');
+            } else {
+                inputCantidad.disabled = true;
+                inputCantidad.required = false;
+                inputCantidad.value = 0;
+                inputCantidad.classList.add('bg-gray-100');
+            }
+            
+            modal.showModal();
+        }
+    }
+
+    function checkEditUnidad(select) {
+        const input = document.getElementById('edit_unidad_input');
+        if(select.value === 'Otro') {
+            input.classList.remove('hidden');
+            input.value = '';
+            input.focus();
+        } else {
+            input.classList.add('hidden');
+            input.value = select.value;
+        }
+    }
+
+    function toggleEditCantidad(checkbox) {
+        const input = document.getElementById('edit_input_cantidad');
+        if(checkbox.checked) {
+            input.disabled = false;
+            input.required = true;
+            input.classList.remove('bg-gray-100');
+        } else {
+            input.disabled = true;
+            input.required = false;
+            input.value = 0;
+            input.classList.add('bg-gray-100');
         }
     }
 </script>

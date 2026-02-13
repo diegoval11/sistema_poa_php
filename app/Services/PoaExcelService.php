@@ -319,15 +319,19 @@ class PoaExcelService
             $colP = Coordinate::stringFromColumnIndex($col);
             $colR = Coordinate::stringFromColumnIndex($col + 1);
             
-            // Programado
-            if ($cantP > 0) {
-                $this->sheet->setCellValue("{$colP}{$fila}", $cantP);
-            }
+            // Programado: Escribir valor o limpiar celda (null)
+            $valP = ($cantP > 0) ? $cantP : null;
+            $this->sheet->setCellValue("{$colP}{$fila}", $valP);
             
-            // Realizado
-            if ($cantR > 0) {
-                $this->sheet->setCellValue("{$colR}{$fila}", $cantR);
+            // Realizado: Si está programado, debe tener valor (0 si es null). Si no, solo si > 0.
+            if ($cantP > 0) {
+                // Si está programado, el 0 cuenta como cumplimiento 0%
+                $valR = $cantR; 
+            } else {
+                // Si no está programado, solo mostramos si hubo ejecución (excedente)
+                $valR = ($cantR > 0) ? $cantR : null;
             }
+            $this->sheet->setCellValue("{$colR}{$fila}", $valR);
             
             $col += 4; // Siguiente mes
             
@@ -369,21 +373,26 @@ class PoaExcelService
     {
         $percentCols = ['S', 'AF', 'AG', 'AT', 'BG', 'BH', 'BI'];
         $moneyCol = 'BJ';
-        $row = 12; // Fila de resumen
+        $row12 = 12; // Resumen Planificadas
+        $row11 = 11; // Resumen General (Ponderado)
 
-        // 1. Columnas de Porcentaje (Promedios)
-        // 1. Columnas de Porcentaje (Promedios)
+        // 1. Columnas de Porcentaje
         foreach ($percentCols as $col) {
-            if ($startU > 0 && $endU >= $startU && $unplannedCount > 0) {
-                // Proportional 80/20 Rule:
-                // Planned: Average * 0.8
-                // Unplanned: (Annual Completed Count / Total Unplanned) * 0.2
-                $formula = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}),0)*0.8 + (COUNTIF(BI{$startU}:BI{$endU}, \">=1\") / {$unplannedCount})*0.2";
+            // Fila 12: Siempre usar promedio de planificadas
+            $formula12 = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}), 0)";
+            $this->sheet->setCellValue("{$col}{$row12}", $formula12);
+            
+            // Fila 11: 80/20 Rule
+            if ($startU > 0 && $endU >= $startU) {
+                // 80% de Fila 12 + 20% si Unplanned > 0
+                // Asumimos que Unplanned usa "1" si completado
+                $unplannedCheck = "COUNTIF({$col}{$startU}:{$col}{$endU}, \">=1\")";
+                $formula11 = "={$col}{$row12}*0.8 + IF({$unplannedCheck}>0, 0.2, 0)";
             } else {
-                // 100% Planificadas
-                $formula = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}), 0)";
+                // 100% de Fila 12
+                $formula11 = "={$col}{$row12}";
             }
-            $this->sheet->setCellValue("{$col}{$row}", $formula);
+            $this->sheet->setCellValue("{$col}{$row11}", $formula11);
         }
 
         // 2. Columna de Recursos (Suma)
@@ -392,6 +401,6 @@ class PoaExcelService
         } else {
             $formulaMoney = "=IFERROR(SUM({$moneyCol}{$startP}:{$moneyCol}{$endP}), 0)";
         }
-        $this->sheet->setCellValue("{$moneyCol}{$row}", $formulaMoney);
+        $this->sheet->setCellValue("{$moneyCol}{$row12}", $formulaMoney);
     }
 }

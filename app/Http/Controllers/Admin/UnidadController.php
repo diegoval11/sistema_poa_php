@@ -83,6 +83,13 @@ class UnidadController extends Controller
             $user->rendimiento = $countActividades > 0 ? round($sumaCumplimientos / $countActividades, 2) : 0;
         }
         
+        if ($request->ajax()) {
+            return view('admin.unidades.partials.list', [
+                'unidades' => $unidades,
+                'busqueda' => $busqueda,
+            ]);
+        }
+
         return view('admin.unidades.lista_unidades', [
             'titulo' => 'Gestión de Unidades',
             'unidades' => $unidades,
@@ -178,6 +185,70 @@ class UnidadController extends Controller
         // Use new service to generate Excel from template
         $service = new \App\Services\PoaExcelService();
         $service->generarExcel($unidad, $proyectos, $proyectoNoPlanificado, $objetivoEstrategico, $anioActual);
+        $service->descargar($fileName);
+    }
+    
+    /**
+     * Exporta el POA resumido de una unidad a Excel
+     */
+    public function exportPoaExcelResumido($unidadId, Request $request)
+    {
+        // validated objetivo estratégico is optional
+        $request->validate([
+            'objetivo_estrategico_id' => 'nullable|exists:objetivos_especificos_predeterminados,id'
+        ]);
+        
+        $unidad = User::where('role', 'unidad')
+            ->with('unidad')
+            ->findOrFail($unidadId);
+        
+        // Get objective if provided
+        $objetivoEstrategico = $request->objetivo_estrategico_id 
+            ? ObjetivoEspecificoPredeterminado::find($request->objetivo_estrategico_id) 
+            : null;
+        
+        $anioActual = now()->year;
+        
+        // Load approved projects (excluding unplanned activities)
+        $proyectos = PoaProyecto::with([
+            'metas.actividades' => function($q) {
+                $q->orderBy('id');
+            },
+            'metas.actividades.programaciones' => function($q) {
+                $q->orderBy('mes');
+            }
+        ])
+        ->where('user_id', $unidadId)
+        ->where('estado', 'APROBADO')
+        ->where('anio', $anioActual)
+        ->where(function($q) {
+            $q->where('nombre', '!=', 'ACTIVIDADES NO PLANIFICADAS')
+              ->orWhereNull('nombre');
+        })
+        ->get();
+        
+        // Load unplanned activities project separately
+        $proyectoNoPlanificado = PoaProyecto::with([
+            'metas.actividades' => function($q) {
+                $q->orderBy('id');
+            },
+            'metas.actividades.programaciones' => function($q) {
+                $q->orderBy('mes');
+            }
+        ])
+        ->where('user_id', $unidadId)
+        ->where('estado', 'APROBADO')
+        ->where('nombre', 'ACTIVIDADES NO PLANIFICADAS')
+        ->where('anio', $anioActual)
+        ->first();
+        
+        // Generate filename for summarized version
+        $nombreUnidad = str_replace(' ', '_', $unidad->unidad->nombre);
+        $fileName = "POA_Resumen_{$nombreUnidad}_{$anioActual}.xlsx";
+        
+        // Use service to generate summarized Excel
+        $service = new \App\Services\PoaExcelResumidoService();
+        $service->generarExcelResumido($unidad, $proyectos, $proyectoNoPlanificado, $objetivoEstrategico, $anioActual);
         $service->descargar($fileName);
     }
 }

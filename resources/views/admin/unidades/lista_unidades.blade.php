@@ -39,71 +39,9 @@
         </div>
     </div>
 
-    {{-- Lista de unidades --}}
-    <div id="contenedor-unidades" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @forelse ($unidades as $unidad)
-        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
-            <div class="card-body">
-                <h2 class="card-title text-congress-blue-700">{{ $unidad->unidad->nombre }}</h2>
-                <p class="text-sm text-gray-500">{{ $unidad->email }}</p>
-                
-                <div class="stats stats-vertical shadow mt-4">
-                    <div class="stat py-2">
-                        <div class="stat-title text-xs">Total Proyectos</div>
-                        <div class="stat-value text-2xl text-congress-blue-600">{{ $unidad->total_proyectos }}</div>
-                    </div>
-                    <div class="stat py-2">
-                        <div class="stat-title text-xs">Aprobados</div>
-                        <div class="stat-value text-2xl text-success">{{ $unidad->count_proyectos_aprobados }}</div>
-                    </div>
-                    {{-- Indicador de rendimiento con colores --}}
-                    <div class="stat py-2">
-                        <div class="stat-title text-xs">Rendimiento</div>
-                        @php
-                            $colorClass = 'text-error';
-                            if ($unidad->rendimiento >= 80) {
-                                $colorClass = 'text-success';
-                            } elseif ($unidad->rendimiento >= 60) {
-                                $colorClass = 'text-warning';
-                            } elseif ($unidad->rendimiento >= 40) {
-                                $colorClass = 'text-orange-500';
-                            }
-                        @endphp
-                        <div class="stat-value text-2xl {{ $colorClass }}">
-                            {{ $unidad->rendimiento }}%
-                        </div>
-                        <div class="stat-desc">
-                            @if($unidad->rendimiento >= 80)
-                                <span class="badge badge-success badge-sm">Excelente</span>
-                            @elseif($unidad->rendimiento >= 60)
-                                <span class="badge badge-warning badge-sm">Bueno</span>
-                            @elseif($unidad->rendimiento >= 40)
-                                <span class="badge badge-warning badge-sm bg-orange-500 border-orange-500">Regular</span>
-                            @else
-                                <span class="badge badge-error badge-sm">Bajo</span>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-actions justify-end mt-4">
-                    <a href="{{ route('admin.unidades.proyectos', $unidad->id) }}" class="btn btn-primary btn-sm bg-congress-blue-600 hover:bg-congress-blue-700 border-none">
-                        Ver Proyectos
-                    </a>
-                </div>
-            </div>
-        </div>
-        @empty
-        <div class="col-span-full text-center py-12">
-            <p class="text-gray-500">No se encontraron unidades.</p>
-        </div>
-        @endforelse
-    </div>
-</div>
-
-    {{-- Paginación --}}
-    <div class="mt-6">
-        {{ $unidades->appends(['buscar' => $busqueda])->links() }}
+    {{-- Contenedor de resultados (AJAX) --}}
+    <div id="resultados-busqueda">
+        @include('admin.unidades.partials.list')
     </div>
 </div>
 
@@ -112,12 +50,30 @@
     const buscador = document.getElementById('buscador-unidades');
     let timeoutId;
     
+    // Función para realizar la búsqueda vía AJAX
+    const realizarBusqueda = (url) => {
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Reemplazar contenido del contenedor de resultados
+            const contenedor = document.getElementById('resultados-busqueda');
+            if (contenedor) {
+                contenedor.innerHTML = html;
+            }
+        })
+        .catch(error => console.error('Error al buscar:', error));
+    };
+
     buscador.addEventListener('input', function() {
         clearTimeout(timeoutId);
         const busqueda = this.value;
         
         timeoutId = setTimeout(() => {
-            // Actualizar URL sin recargar la página
+            // Construir URL
             const url = new URL(window.location);
             if (busqueda) {
                 url.searchParams.set('buscar', busqueda);
@@ -125,14 +81,18 @@
                 url.searchParams.delete('buscar');
             }
             
-            // CRITICAL: Reset pagination to page 1 when searching
+            // Reset pagination
             url.searchParams.delete('page');
             
+            // Actualizar URL en el navegador sin recargar
             window.history.pushState({}, '', url);
             
-            // Recargar la página con el nuevo parámetro
-            window.location.href = url;
-        }, 500);
+            // Ejecutar búsqueda AJAX
+            realizarBusqueda(url);
+        }, 300); // 300ms de debounce (más rápido)
     });
+
+    // Manejar botones de paginación para que también sean AJAX si se desea (opcional, por ahora solo arreglamos el buscador)
+    // Pero si el usuario cambia de página y luego busca, ya manejamos el reset de página.
 </script>
 @endsection

@@ -150,6 +150,73 @@ class WizardController extends Controller
             ->with('success', 'Actividad registrada correctamente.');
     }
 
+    public function updateMeta(Request $request, $id)
+    {
+        $meta = PoaMeta::findOrFail($id);
+        $proyecto = $meta->proyecto;
+        
+        // Validar que el proyecto pertenece al usuario
+        if ($proyecto->user_id !== Auth::id()) {
+            abort(403, 'No autorizado');
+        }
+        
+        // Validar que el proyecto está en BORRADOR
+        if ($proyecto->estado !== 'BORRADOR') {
+            return redirect()->back()->with('error', 'Solo se pueden editar metas de proyectos en estado BORRADOR.');
+        }
+        
+        $request->validate([
+            'descripcion' => 'required|string|max:500'
+        ]);
+        
+        DB::transaction(function () use ($meta, $request) {
+            $meta->update(['descripcion' => $request->descripcion]);
+        });
+        
+        return redirect()->route('poa.wizard.step2', $proyecto->id)
+            ->with('success', 'Meta actualizada correctamente.');
+    }
+
+    public function updateActividad(Request $request, $id)
+    {
+        $actividad = PoaActividad::findOrFail($id);
+        $proyecto = $actividad->meta->proyecto;
+        
+        // Validar que el proyecto pertenece al usuario
+        if ($proyecto->user_id !== Auth::id()) {
+            abort(403, 'No autorizado');
+        }
+        
+        // Validar que el proyecto está en BORRADOR
+        if ($proyecto->estado !== 'BORRADOR') {
+            return redirect()->back()->with('error', 'Solo se pueden editar actividades de proyectos en estado BORRADOR.');
+        }
+        
+        $request->validate([
+            'descripcion' => 'required|string|max:500',
+            'unidad_medida' => 'required|string|max:100',
+            'cantidad_programada_total' => 'required_if:es_cuantificable,1|integer|min:1',
+            'medio_verificacion' => 'required|string|max:255',
+            'costo_estimado' => 'nullable|numeric|min:0',
+            'recursos' => 'nullable|string|max:500',
+        ]);
+        
+        DB::transaction(function () use ($actividad, $request) {
+            $actividad->update([
+                'descripcion' => $request->descripcion,
+                'unidad_medida' => $request->unidad_medida,
+                'es_cuantificable' => $request->has('es_cuantificable'),
+                'cantidad_programada_total' => $request->has('es_cuantificable') ? (int)$request->cantidad_programada_total : 0,
+                'medio_verificacion' => $request->medio_verificacion,
+                'costo_estimado' => $request->input('costo_estimado', 0),
+                'recursos' => $request->recursos,
+            ]);
+        });
+        
+        return redirect()->route('poa.wizard.step3', ['id' => $proyecto->id, 'tab' => $actividad->poa_meta_id])
+            ->with('success', 'Actividad actualizada correctamente.');
+    }
+
     public function updateProgramacion(Request $request, $id)
     {
         DB::transaction(function () use ($request) {

@@ -144,13 +144,14 @@
 
 {{-- Modal Crear Unidad --}}
 <x-modal-form id="modal_crear" title="Crear Nueva Unidad">
-    <form method="POST" action="{{ route('admin.panel.unidades.store') }}">
+    <form method="POST" action="{{ route('admin.panel.unidades.store') }}" onsubmit="submitAjaxForm(event)">
         @csrf
         <div class="p-6">
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Nombre de la Unidad</label>
                     <input type="text" name="nombre" class="input input-bordered w-full rounded-lg border-2 border-gray-300 focus:border-congress-blue-500 focus:ring-2 focus:ring-congress-blue-200" required>
+                    <span class="text-red-500 text-sm mt-1 error-text error-nombre block"></span>
                 </div>
                 <div class="form-control">
                     <label class="label cursor-pointer justify-start gap-3">
@@ -186,7 +187,7 @@
 
 {{-- Modal Editar Unidad --}}
 <x-modal-form id="modal_editar" title="Editar Unidad">
-    <form id="form_editar" method="POST">
+    <form id="form_editar" method="POST" onsubmit="submitAjaxForm(event)">
         @csrf
         @method('PUT')
         <div class="p-6">
@@ -194,6 +195,7 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Nombre de la Unidad</label>
                     <input type="text" name="nombre" id="edit_nombre" class="input input-bordered w-full rounded-lg border-2 border-gray-300 focus:border-congress-blue-500 focus:ring-2 focus:ring-congress-blue-200" required>
+                    <span class="text-red-500 text-sm mt-1 error-text error-nombre block"></span>
                 </div>
                 <div class="form-control">
                     <label class="label cursor-pointer justify-start gap-3">
@@ -217,7 +219,7 @@
         </div>
         
         <div class="bg-gray-50 px-6 py-4 rounded-b-2xl border-t border-gray-100 flex flex-col sm:flex-row justify-end gap-3">
-            <button type="button" onclick="document.getElementById('modal_editar').close()\" class="btn bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 hover:border-gray-400 rounded-lg px-6 font-semibold shadow-sm">
+            <button type="button" onclick="document.getElementById('modal_editar').close()" class="btn bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 hover:border-gray-400 rounded-lg px-6 font-semibold shadow-sm">
                 Cancelar
             </button>
             <button type="submit" class="btn bg-congress-blue-600 hover:bg-congress-blue-700 text-white border-0 rounded-lg px-6 font-semibold shadow-lg">
@@ -283,6 +285,48 @@ function confirmDeleteUnidad(id, nombre, usersCount) {
         document.getElementById('form_eliminar').querySelector('button[type="submit"]').textContent = 'Eliminar Unidad';
     }
     document.getElementById('modal_eliminar').showModal();
+}
+
+async function submitAjaxForm(event) {
+    event.preventDefault();
+    const form = event.target;
+    // Clear errors
+    form.querySelectorAll('.error-text').forEach(el => el.textContent = '');
+    
+    // Disable submit button
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if(submitBtn) submitBtn.disabled = true;
+
+    try {
+        const response = await fetch(form.action, {
+            method: form.method === 'GET' ? 'GET' : 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+        
+        if (response.status === 422) {
+            const data = await response.json();
+            Object.keys(data.errors).forEach(key => {
+                const errorEl = form.querySelector(`.error-${key}`);
+                if (errorEl) errorEl.textContent = data.errors[key][0];
+            });
+        } else if (response.status === 500) {
+             alert('Error del servidor. Por favor intente más tarde.');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Ocurrió un error inesperado.');
+    } finally {
+        if(submitBtn) submitBtn.disabled = false;
+    }
 }
 </script>
 @endpush

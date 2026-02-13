@@ -137,22 +137,25 @@
 
 {{-- Modal Crear Usuario --}}
 <x-modal-form id="modal_crear" title="Crear Nuevo Usuario">
-    <form method="POST" action="{{ route('admin.panel.usuarios.store') }}">
+    <form method="POST" action="{{ route('admin.panel.usuarios.store') }}" onsubmit="submitAjaxForm(event)">
         @csrf
         <div class="p-6">
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Nombre Completo</label>
                     <input type="text" name="name" class="input input-bordered w-full rounded-lg border-2 border-gray-300 focus:border-congress-blue-500 focus:ring-2 focus:ring-congress-blue-200" required>
+                    <span class="text-red-500 text-sm mt-1 error-text error-name block"></span>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Email</label>
                     <input type="email" name="email" class="input input-bordered w-full rounded-lg border-2 border-gray-300 focus:border-congress-blue-500 focus:ring-2 focus:ring-congress-blue-200" required>
+                    <span class="text-red-500 text-sm mt-1 error-text error-email block"></span>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Contraseña</label>
                     <input type="password" name="password" class="input input-bordered w-full rounded-lg border-2 border-gray-300 focus:border-congress-blue-500 focus:ring-2 focus:ring-congress-blue-200" required minlength="8">
                     <p class="text-sm text-gray-500 mt-1">Mínimo 8 caracteres</p>
+                    <span class="text-red-500 text-sm mt-1 error-text error-password block"></span>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Rol</label>
@@ -161,6 +164,7 @@
                         <option value="admin">Administrador</option>
                         <option value="unidad">Unidad</option>
                     </select>
+                    <span class="text-red-500 text-sm mt-1 error-text error-role block"></span>
                 </div>
                 <div id="create_unidad_field" style="display:none;">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Unidad</label>
@@ -170,6 +174,7 @@
                             <option value="{{ $unidad->id }}">{{ $unidad->nombre }}</option>
                         @endforeach
                     </select>
+                    <span class="text-red-500 text-sm mt-1 error-text error-unidad_id block"></span>
                 </div>
             </div>
         </div>
@@ -187,7 +192,7 @@
 
 {{-- Modal Editar Usuario --}}
 <x-modal-form id="modal_editar" title="Editar Usuario">
-    <form id="form_editar" method="POST">
+    <form id="form_editar" method="POST" onsubmit="submitAjaxForm(event)">
         @csrf
         @method('PUT')
         <div class="p-6">
@@ -195,15 +200,18 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Nombre Completo</label>
                     <input type="text" name="name" id="edit_name" class="input input-bordered w-full rounded-lg border-2 border-gray-300 focus:border-congress-blue-500 focus:ring-2 focus:ring-congress-blue-200" required>
+                    <span class="text-red-500 text-sm mt-1 error-text error-name block"></span>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Email</label>
                     <input type="email" name="email" id="edit_email" class="input input-bordered w-full rounded-lg border-2 border-gray-300 focus:border-congress-blue-500 focus:ring-2 focus:ring-congress-blue-200" required>
+                    <span class="text-red-500 text-sm mt-1 error-text error-email block"></span>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Contraseña (dejar en blanco para no cambiar)</label>
                     <input type="password" name="password" class="input input-bordered w-full rounded-lg border-2 border-gray-300 focus:border-congress-blue-500 focus:ring-2 focus:ring-congress-blue-200" minlength="8">
                     <p class="text-sm text-gray-500 mt-1">Solo llenar si desea cambiar la contraseña</p>
+                    <span class="text-red-500 text-sm mt-1 error-text error-password block"></span>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Rol</label>
@@ -211,6 +219,7 @@
                         <option value="admin">Administrador</option>
                         <option value="unidad">Unidad</option>
                     </select>
+                    <span class="text-red-500 text-sm mt-1 error-text error-role block"></span>
                 </div>
                 <div id="edit_unidad_field">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Unidad</label>
@@ -220,6 +229,7 @@
                             <option value="{{ $unidad->id }}">{{ $unidad->nombre }}</option>
                         @endforeach
                     </select>
+                    <span class="text-red-500 text-sm mt-1 error-text error-unidad_id block"></span>
                 </div>
             </div>
         </div>
@@ -295,6 +305,51 @@ function confirmDeleteUsuario(id, name) {
     document.getElementById('delete_message').innerHTML = `¿Estás seguro de que deseas eliminar al usuario <strong>"${name}"</strong>? Esta acción <strong class="text-red-600">NO se puede deshacer</strong>.`;
     document.getElementById('form_eliminar').action = `/admin/panel/usuarios/${id}`;
     document.getElementById('modal_eliminar').showModal();
+}
+
+async function submitAjaxForm(event) {
+    event.preventDefault();
+    const form = event.target;
+    // Clear errors
+    form.querySelectorAll('.error-text').forEach(el => el.textContent = '');
+    
+    // Disable submit button
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if(submitBtn) submitBtn.disabled = true;
+
+    try {
+        const response = await fetch(form.action, {
+            method: form.method === 'GET' ? 'GET' : 'POST', // Fetch native doesn't support PUT in method property directly for FormData usually, but Laravel _method handles it. 
+            // Actually fetch supports PUT. But Laravel handling with FormData usually requires POST + _method field.
+            // The form has @method('PUT') which generates <input type="hidden" name="_method" value="PUT">.
+            // So we send POST, and Laravel sees _method.
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+        
+        if (response.status === 422) {
+            const data = await response.json();
+            Object.keys(data.errors).forEach(key => {
+                const errorEl = form.querySelector(`.error-${key}`);
+                if (errorEl) errorEl.textContent = data.errors[key][0];
+            });
+        } else if (response.status === 500) {
+             alert('Error del servidor. Por favor intente más tarde.');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Ocurrió un error inesperado.');
+    } finally {
+        if(submitBtn) submitBtn.disabled = false;
+    }
 }
 </script>
 @endpush

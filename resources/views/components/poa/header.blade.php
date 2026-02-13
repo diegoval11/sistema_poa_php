@@ -9,10 +9,8 @@
                         : route('dashboard');
                 @endphp
                 <a href="{{ $logoRoute }}" class="flex items-center gap-3 hover:opacity-90 transition">
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-congress-blue-800 shadow-inner">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-inner overflow-hidden p-1">
+                        <img src="{{ asset('images/logo_alcaldia.png') }}" alt="Logo Alcaldía" class="w-full h-full object-contain">
                     </div>
                     <div class="leading-tight hidden md:block">
                         <h1 class="font-bold text-lg tracking-wide">ALCALDIA MUNICIPAL DE SANTA ANA CENTRO</h1>

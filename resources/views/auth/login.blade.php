@@ -8,8 +8,9 @@
                     <div class="flex justify-center mb-4">
                         <img src="{{ asset('images/logo_alcaldia.png') }}" alt="Alcaldia Logo" class="h-20 w-auto object-contain mx-auto">
                     </div>
-                    <h1 class="text-3xl font-black text-blue-900 tracking-tight">Sistema de POA</h1>
-                    <p class="text-gray-500 text-sm mt-2">Ingrese sus credenciales institucionales</p>
+                    <h1 class="text-2xl font-black text-blue-900 tracking-tight">Alcaldia Municipal de Santa Ana Centro</h1>
+                    <p class="text-blue-700 text-lg font-bold mt-2">Sistema POA</p>
+                    <p class="text-gray-500 text-sm mt-1">Ingrese sus credenciales institucionales</p>
                 </div>
 
                 <form method="POST" action="{{ route('login') }}">
