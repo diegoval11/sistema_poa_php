@@ -201,22 +201,23 @@ class PoaExcelService
                     $this->sheet->setCellValue("{$colCumpl}{$row}", "=IF({$colReal}{$row}>0, 1, 0)");
                 }
                 
-                // 2. Trimestrales, Semestrales, Anual (Checks de > 0)
-                // Q1: S -> H, L, P
-                $this->sheet->setCellValue("S{$row}", "=IF(SUM(H{$row},L{$row},P{$row})>0, 1, 0)");
-                // Q2: AF -> U, Y, AC
-                $this->sheet->setCellValue("AF{$row}", "=IF(SUM(U{$row},Y{$row},AC{$row})>0, 1, 0)");
-                // S1: AG -> (Q1 + Q2)
-                $this->sheet->setCellValue("AG{$row}", "=IF(SUM(H{$row},L{$row},P{$row},U{$row},Y{$row},AC{$row})>0, 1, 0)");
-                // Q3: AT -> AH, AL, AP
-                $this->sheet->setCellValue("AT{$row}", "=IF(SUM(AH{$row},AL{$row},AP{$row})>0, 1, 0)");
-                // Q4: BG -> AU, AY, BC
-                $this->sheet->setCellValue("BG{$row}", "=IF(SUM(AU{$row},AY{$row},BC{$row})>0, 1, 0)");
-                // S2: BH -> (Q3 + Q4)
-                $this->sheet->setCellValue("BH{$row}", "=IF(SUM(AH{$row},AL{$row},AP{$row},AU{$row},AY{$row},BC{$row})>0, 1, 0)");
-                // Anual: BI -> All
-                $allCols = implode("{$row},", array_keys($map)) . "{$row}";
-                $this->sheet->setCellValue("BI{$row}", "=IF(SUM({$allCols})>0, 1, 0)");
+                // 2. Trimestrales, Semestrales, Anual
+                // Use MAX of Cumplimiento columns - if any month has activity, quarter = 100%
+                // Q1: S -> MAX(I, M, Q) - at least one activity in Q1
+                $this->sheet->setCellValue("S{$row}", "=MAX(I{$row},M{$row},Q{$row})");
+                // Q2: AF -> MAX(V, Z, AD) - at least one activity in Q2
+                $this->sheet->setCellValue("AF{$row}", "=MAX(V{$row},Z{$row},AD{$row})");
+                // S1: AG -> MAX of Q1, Q2 quarters
+                $this->sheet->setCellValue("AG{$row}", "=MAX(S{$row},AF{$row})");
+                // Q3: AT -> MAX(AI, AM, AQ) - at least one activity in Q3
+                $this->sheet->setCellValue("AT{$row}", "=MAX(AI{$row},AM{$row},AQ{$row})");
+                // Q4: BG -> MAX(AV, AZ, BD) - at least one activity in Q4
+                $this->sheet->setCellValue("BG{$row}", "=MAX(AV{$row},AZ{$row},BD{$row})");
+                // S2: BH -> MAX of Q3, Q4 quarters
+                $this->sheet->setCellValue("BH{$row}", "=MAX(AT{$row},BG{$row})");
+                // Anual: BI -> MAX of all quarters
+                $this->sheet->setCellValue("BI{$row}", "=MAX(S{$row},AF{$row},AT{$row},BG{$row})");
+
                 
                 $this->llenarFilaActividad($actividad, $num);
                 
@@ -318,20 +319,31 @@ class PoaExcelService
             
             $colP = Coordinate::stringFromColumnIndex($col);
             $colR = Coordinate::stringFromColumnIndex($col + 1);
+            $colVerif = Coordinate::stringFromColumnIndex($col + 3); // Columna de Verificación
             
-            // Programado: Escribir valor o limpiar celda (null)
-            $valP = ($cantP > 0) ? $cantP : null;
+            // Programado: Escribir valor o 0 (en lugar de null)
+            $valP = ($cantP > 0) ? $cantP : 0;
             $this->sheet->setCellValue("{$colP}{$fila}", $valP);
             
-            // Realizado: Si está programado, debe tener valor (0 si es null). Si no, solo si > 0.
+            // Realizado: Siempre mostrar 0 si no hay valor (en lugar de null)
             if ($cantP > 0) {
-                // Si está programado, el 0 cuenta como cumplimiento 0%
+                // Si está programado, mostrar el valor realizado (puede ser 0)
                 $valR = $cantR; 
             } else {
-                // Si no está programado, solo mostramos si hubo ejecución (excedente)
-                $valR = ($cantR > 0) ? $cantR : null;
+                // Si no está programado, solo mostrar si hubo ejecución, sino 0
+                $valR = ($cantR > 0) ? $cantR : 0;
             }
             $this->sheet->setCellValue("{$colR}{$fila}", $valR);
+            
+            // Evidencias: Obtener y mostrar tipos de evidencia para este mes
+            if (isset($actividad->evidencias)) {
+                $evidenciasMes = $actividad->evidencias->where('mes', $mes);
+                if ($evidenciasMes->isNotEmpty()) {
+                    // Obtener tipos únicos y concatenarlos con coma
+                    $tiposEvidencia = $evidenciasMes->pluck('tipo')->unique()->implode(', ');
+                    $this->sheet->setCellValue("{$colVerif}{$fila}", $tiposEvidencia);
+                }
+            }
             
             $col += 4; // Siguiente mes
             
@@ -384,10 +396,9 @@ class PoaExcelService
             
             // Fila 11: 80/20 Rule
             if ($startU > 0 && $endU >= $startU) {
-                // 80% de Fila 12 + 20% si Unplanned > 0
-                // Asumimos que Unplanned usa "1" si completado
-                $unplannedCheck = "COUNTIF({$col}{$startU}:{$col}{$endU}, \">=1\")";
-                $formula11 = "={$col}{$row12}*0.8 + IF({$unplannedCheck}>0, 0.2, 0)";
+                // 80% de Fila 12 (Planificadas) + 20% del promedio de No Planificadas
+                // Calcula el promedio real de las actividades no planificadas y aplica el peso 20%
+                $formula11 = "={$col}{$row12}*0.8 + IFERROR(AVERAGE({$col}{$startU}:{$col}{$endU}), 0)*0.2";
             } else {
                 // 100% de Fila 12
                 $formula11 = "={$col}{$row12}";

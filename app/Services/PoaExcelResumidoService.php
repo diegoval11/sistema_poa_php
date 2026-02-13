@@ -56,6 +56,12 @@ class PoaExcelResumidoService
         $realUnplanTemplatePos = $currentUnplanTemplate - 1;
         $this->sheet->removeRow($realUnplanTemplatePos, 1);
         
+        // Calcular la última fila de datos (ajustado por las 2 eliminaciones de template)
+        $lastDataRow = $this->currentRow - 2;
+        
+        // Configurar columna de Recursos AL FINAL (después de todas las manipulaciones)
+        $this->configurarColumnRecursos($lastDataRow);
+        
         return $this->spreadsheet;
     }
 
@@ -86,6 +92,83 @@ class PoaExcelResumidoService
             }
         }
         $this->sheet->setCellValue('C7', "OBJETIVO DE LA UNIDAD:\n" . $objetivos);
+    }
+    
+    /**
+     * Configura la columna de Recursos (S) con headers y total
+     * Se llama AL FINAL después de todas las manipulaciones de filas
+     */
+    protected function configurarColumnRecursos($lastDataRow)
+    {
+        // PASO 1: Limpiar la configuración existente de la plantilla
+        // La plantilla tiene S10:S13 merged con "RECURSOS", necesitamos deshacer eso
+        
+        // Unmerge cualquier celda existente en la columna S (filas 10-13)
+        if ($this->sheet->getCell('S10')->isInMergeRange()) {
+            $this->sheet->unmergeCells('S10:S13');
+        }
+        
+        // Limpiar valores y estilos existentes en S10-S13
+        for ($row = 10; $row <= 13; $row++) {
+            $this->sheet->setCellValue("S{$row}", '');
+            $this->sheet->getStyle("S{$row}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_NONE);
+            $this->sheet->getStyle("S{$row}")->getFont()->setBold(false)->setSize(11);
+        }
+        
+        // PASO 2: Aplicar nueva configuración
+        
+        // Estilo de bordes
+        $borderStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
+        ];
+        
+        // Configurar alturas de filas
+        $this->sheet->getRowDimension(10)->setRowHeight(20); // Celda pequeña para total
+        $this->sheet->getRowDimension(11)->setRowHeight(20); // Celda pequeña para total
+        
+        // S10: Primera celda de Total (Azul celeste) - PEQUEÑA
+        $this->sheet->setCellValue('S10', "=SUM(S14:S{$lastDataRow})");
+        $this->sheet->getStyle('S10')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFBDD7EE'); // Azul celeste
+        $this->sheet->getStyle('S10')->getNumberFormat()->setFormatCode('"$" #,##0.00');
+        $this->sheet->getStyle('S10')->getFont()->setBold(true)->setSize(10);
+        $this->sheet->getStyle('S10')->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT)
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        $this->sheet->getStyle('S10')->applyFromArray($borderStyle);
+        
+        // S11: Segunda celda de Total (Azul celeste) - PEQUEÑA
+        $this->sheet->setCellValue('S11', '=S10');
+        $this->sheet->getStyle('S11')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFBDD7EE'); // Azul celeste
+        $this->sheet->getStyle('S11')->getNumberFormat()->setFormatCode('"$" #,##0.00');
+        $this->sheet->getStyle('S11')->getFont()->setBold(true)->setSize(10);
+        $this->sheet->getStyle('S11')->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT)
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        $this->sheet->getStyle('S11')->applyFromArray($borderStyle);
+            
+        // S12:S13: Encabezado "10. Total de Recursos $$$" (Verde/Amarillo) - GRANDE
+        $this->sheet->mergeCells('S12:S13');
+        $this->sheet->setCellValue('S12', "10. Total de\nRecursos\n\$\$\$");
+        
+        $this->sheet->getStyle('S12:S13')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFD8E4BC'); // Verde/Amarillo
+            
+        $this->sheet->getStyle('S12:S13')->getFont()->setBold(true)->setSize(11);
+        $this->sheet->getStyle('S12:S13')->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+            ->setWrapText(true);
+        $this->sheet->getStyle('S12:S13')->applyFromArray($borderStyle);
     }
 
     /**
@@ -254,6 +337,8 @@ class PoaExcelResumidoService
         // S: RECURSOS (Costo estimado)
         if ($actividad->costo_estimado) {
             $this->sheet->setCellValue("S{$fila}", $actividad->costo_estimado);
+            // Agregar formato de moneda con prefijo $
+            $this->sheet->getStyle("S{$fila}")->getNumberFormat()->setFormatCode('"$" #,##0.00');
         }
     }
 
