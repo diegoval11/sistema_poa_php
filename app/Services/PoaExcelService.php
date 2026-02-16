@@ -192,8 +192,8 @@ class PoaExcelService
                 $map = [
                     'H' => 'I', 'L' => 'M', 'P' => 'Q', // Q1
                     'U' => 'V', 'Y' => 'Z', 'AC' => 'AD', // Q2
-                    'AH' => 'AI', 'AL' => 'AM', 'AP' => 'AQ', // Q3
-                    'AU' => 'AV', 'AY' => 'AZ', 'BC' => 'BD'  // Q4
+                    'AI' => 'AJ', 'AM' => 'AN', 'AQ' => 'AR', // Q3
+                    'AV' => 'AW', 'AZ' => 'BA', 'BD' => 'BE'  // Q4
                 ];
                 
                 // 1. Mensuales
@@ -209,10 +209,10 @@ class PoaExcelService
                 $this->sheet->setCellValue("AF{$row}", "=MAX(V{$row},Z{$row},AD{$row})");
                 // S1: AG -> MAX of Q1, Q2 quarters
                 $this->sheet->setCellValue("AG{$row}", "=MAX(S{$row},AF{$row})");
-                // Q3: AT -> MAX(AI, AM, AQ) - at least one activity in Q3
-                $this->sheet->setCellValue("AT{$row}", "=MAX(AI{$row},AM{$row},AQ{$row})");
-                // Q4: BG -> MAX(AV, AZ, BD) - at least one activity in Q4
-                $this->sheet->setCellValue("BG{$row}", "=MAX(AV{$row},AZ{$row},BD{$row})");
+                // Q3: AT -> MAX(AJ, AN, AR) - Cumplimiento columns for Q3
+                $this->sheet->setCellValue("AT{$row}", "=MAX(AJ{$row},AN{$row},AR{$row})");
+                // Q4: BG -> MAX(AW, BA, BE) - Cumplimiento columns for Q4
+                $this->sheet->setCellValue("BG{$row}", "=MAX(AW{$row},BA{$row},BE{$row})");
                 // S2: BH -> MAX of Q3, Q4 quarters
                 $this->sheet->setCellValue("BH{$row}", "=MAX(AT{$row},BG{$row})");
                 // Anual: BI -> MAX of all quarters
@@ -398,7 +398,8 @@ class PoaExcelService
             if ($startU > 0 && $endU >= $startU) {
                 // 80% de Fila 12 (Planificadas) + 20% del promedio de No Planificadas
                 // Calcula el promedio real de las actividades no planificadas y aplica el peso 20%
-                $formula11 = "={$col}{$row12}*0.8 + IFERROR(AVERAGE({$col}{$startU}:{$col}{$endU}), 0)*0.2";
+                // MIN(..., 1) limita el promedio a un máximo de 1.0 (100%) para evitar valores como 2300%
+                $formula11 = "={$col}{$row12}*0.8 + MIN(IFERROR(AVERAGE({$col}{$startU}:{$col}{$endU}), 0), 1)*0.2";
             } else {
                 // 100% de Fila 12
                 $formula11 = "={$col}{$row12}";
