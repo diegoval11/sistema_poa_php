@@ -335,14 +335,10 @@ class PoaExcelService
             }
             $this->sheet->setCellValue("{$colR}{$fila}", $valR);
             
-            // Evidencias: Obtener y mostrar tipos de evidencia para este mes
-            if (isset($actividad->evidencias)) {
-                $evidenciasMes = $actividad->evidencias->where('mes', $mes);
-                if ($evidenciasMes->isNotEmpty()) {
-                    // Obtener tipos únicos y concatenarlos con coma
-                    $tiposEvidencia = $evidenciasMes->pluck('tipo')->unique()->implode(', ');
-                    $this->sheet->setCellValue("{$colVerif}{$fila}", $tiposEvidencia);
-                }
+            // Medio de Verificación: Mostrar el campo medio_verificacion de la actividad
+            // Este campo se registra al crear la actividad en el wizard
+            if (!empty($actividad->medio_verificacion)) {
+                $this->sheet->setCellValue("{$colVerif}{$fila}", $actividad->medio_verificacion);
             }
             
             $col += 4; // Siguiente mes
