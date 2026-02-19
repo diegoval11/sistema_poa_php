@@ -67,19 +67,14 @@ class PoaExcelService
         $rangeP_Start -= 1;
         $rangeP_End -= 1;
         
-        // Remove unplanned template
-        $finalUnplanTemplatePos = $currentUnplanTemplate;
-        
-        // Calculate real position after previous deletion
-        $realUnplanTemplatePos = $finalUnplanTemplatePos - 1; 
-        $this->sheet->removeRow($realUnplanTemplatePos, 1);
-        
-        // Adjust unplanned ranges (shifted up by 2 total)
-        $rangeU_Start -= 2;
-        $rangeU_End -= 2;
+        // Keep unplanned header row (contains COUNTIF summary formulas)
+        // Only adjust ranges for the single planned template row removal
+        $rangeU_Start -= 1;
+        $rangeU_End -= 1;
+        $unplannedHeaderRow = $currentUnplanTemplate - 1; // Header row with COUNTIF
         
         // Update summary formulas with the valid ranges
-        $this->updateSummaryFormulas($rangeP_Start, $rangeP_End, $rangeU_Start, $rangeU_End, $totalUnplannedActivities);
+        $this->updateSummaryFormulas($rangeP_Start, $rangeP_End, $rangeU_Start, $rangeU_End, $totalUnplannedActivities, $unplannedHeaderRow);
         
         return $this->spreadsheet;
     }
@@ -147,7 +142,7 @@ class PoaExcelService
                     $this->insertarFilaClonada($this->currentRow, $this->templateRowPlanificadas);
                     
                     // Llenar datos de la actividad
-                    $this->llenarFilaActividad($actividad, $num);
+                    $this->llenarFilaActividad($actividad, $num, true);
                     
                     $num++;
                     $this->currentRow++;
@@ -186,7 +181,7 @@ class PoaExcelService
                 $this->insertarFilaClonada($this->currentRow, $templateRow);
                 
                 // Override formulas for unplanned activities since 'Programado' is 0.
-                // Logic: If Executed > 0, then 100% compliance.
+                // Formato texto: "100%" / "0" para compatibilidad con COUNTIF de la cabecera
                 
                 $row = $this->currentRow;
                 $map = [
@@ -196,30 +191,29 @@ class PoaExcelService
                     'AV' => 'AW', 'AZ' => 'BA', 'BD' => 'BE'  // Q4
                 ];
                 
-                // 1. Mensuales
+                // 1. Mensuales: "100%" si ejecutado >= 1, "0" si no
                 foreach ($map as $colReal => $colCumpl) {
-                    $this->sheet->setCellValue("{$colCumpl}{$row}", "=IF({$colReal}{$row}>0, 1, 0)");
+                    $this->sheet->setCellValue("{$colCumpl}{$row}", "=IF({$colReal}{$row}>=1,\"100%\",\"0\")");
                 }
                 
-                // 2. Trimestrales, Semestrales, Anual
-                // Use MAX of Cumplimiento columns - if any month has activity, quarter = 100%
-                // Q1: S -> MAX(I, M, Q) - at least one activity in Q1
-                $this->sheet->setCellValue("S{$row}", "=MAX(I{$row},M{$row},Q{$row})");
-                // Q2: AF -> MAX(V, Z, AD) - at least one activity in Q2
-                $this->sheet->setCellValue("AF{$row}", "=MAX(V{$row},Z{$row},AD{$row})");
-                // S1: AG -> MAX of Q1, Q2 quarters
-                $this->sheet->setCellValue("AG{$row}", "=MAX(S{$row},AF{$row})");
-                // Q3: AT -> MAX(AJ, AN, AR) - Cumplimiento columns for Q3
-                $this->sheet->setCellValue("AT{$row}", "=MAX(AJ{$row},AN{$row},AR{$row})");
-                // Q4: BG -> MAX(AW, BA, BE) - Cumplimiento columns for Q4
-                $this->sheet->setCellValue("BG{$row}", "=MAX(AW{$row},BA{$row},BE{$row})");
-                // S2: BH -> MAX of Q3, Q4 quarters
-                $this->sheet->setCellValue("BH{$row}", "=MAX(AT{$row},BG{$row})");
-                // Anual: BI -> MAX of all quarters
-                $this->sheet->setCellValue("BI{$row}", "=MAX(S{$row},AF{$row},AT{$row},BG{$row})");
+                // 2. Trimestrales, Semestrales, Anual — formato texto
+                // Q1: S -> si algún mes del Q1 es "100%"
+                $this->sheet->setCellValue("S{$row}", "=IF(OR(I{$row}=\"100%\",M{$row}=\"100%\",Q{$row}=\"100%\"),\"100%\",\"VALORES NO COLOCADOS\")");
+                // Q2: AF -> si algún mes del Q2 es "100%"
+                $this->sheet->setCellValue("AF{$row}", "=IF(OR(V{$row}=\"100%\",Z{$row}=\"100%\",AD{$row}=\"100%\"),\"100%\",\"VALORES NO COLOCADOS\")");
+                // S1: AG -> si Q1 o Q2 es "100%"
+                $this->sheet->setCellValue("AG{$row}", "=IF(OR(S{$row}=\"100%\",AF{$row}=\"100%\"),\"100%\",\"VALORES NO COLOCADOS\")");
+                // Q3: AT -> si algún mes del Q3 es "100%"
+                $this->sheet->setCellValue("AT{$row}", "=IF(OR(AJ{$row}=\"100%\",AN{$row}=\"100%\",AR{$row}=\"100%\"),\"100%\",\"VALORES NO COLOCADOS\")");
+                // Q4: BG -> si algún mes del Q4 es "100%"
+                $this->sheet->setCellValue("BG{$row}", "=IF(OR(AW{$row}=\"100%\",BA{$row}=\"100%\",BE{$row}=\"100%\"),\"100%\",\"VALORES NO COLOCADOS\")");
+                // S2: BH -> si Q3 o Q4 es "100%"
+                $this->sheet->setCellValue("BH{$row}", "=IF(OR(AT{$row}=\"100%\",BG{$row}=\"100%\"),\"100%\",\"VALORES NO COLOCADOS\")");
+                // Anual: BI -> si S1 o S2 es "100%"
+                $this->sheet->setCellValue("BI{$row}", "=IF(OR(AG{$row}=\"100%\",BH{$row}=\"100%\"),\"100%\",\"VALORES NO COLOCADOS\")");
 
                 
-                $this->llenarFilaActividad($actividad, $num);
+                $this->llenarFilaActividad($actividad, $num, false);
                 
                 $num++;
                 $this->currentRow++;
@@ -296,7 +290,7 @@ class PoaExcelService
     /**
      * Llena una fila con los datos de una actividad
      */
-    protected function llenarFilaActividad($actividad, $num)
+    protected function llenarFilaActividad($actividad, $num, $esPlanificada = true)
     {
         $fila = $this->currentRow;
         
@@ -335,9 +329,18 @@ class PoaExcelService
             }
             $this->sheet->setCellValue("{$colR}{$fila}", $valR);
             
-            // Medio de Verificación: Mostrar el campo medio_verificacion de la actividad
-            // Este campo se registra al crear la actividad en el wizard
+            // Medio de Verificación: Solo mostrar en meses con actividad relevante
+            // Planificadas: solo si tiene programación en ese mes
+            // No planificadas: solo si tiene ejecución en ese mes
+            $mostrarMV = false;
             if (!empty($actividad->medio_verificacion)) {
+                if ($esPlanificada && $cantP > 0) {
+                    $mostrarMV = true;
+                } elseif (!$esPlanificada && $cantR > 0) {
+                    $mostrarMV = true;
+                }
+            }
+            if ($mostrarMV) {
                 $this->sheet->setCellValue("{$colVerif}{$fila}", $actividad->medio_verificacion);
             }
             
@@ -375,9 +378,10 @@ class PoaExcelService
     }
     /**
      * Actualiza las fórmulas de resumen (Trimestral, Semestral, Anual, Recursos)
-     * Aplicando la regla 80/20 si hay actividades no planificadas.
+     * Aplica la regla 80/20 usando IF: si la cabecera de no planificadas es "100%",
+     * pondera 80% planificadas + 20% no planificadas; si no, usa solo planificadas.
      */
-    protected function updateSummaryFormulas($startP, $endP, $startU, $endU, $unplannedCount)
+    protected function updateSummaryFormulas($startP, $endP, $startU, $endU, $unplannedCount, $unplannedHeaderRow = 0)
     {
         $percentCols = ['S', 'AF', 'AG', 'AT', 'BG', 'BH', 'BI'];
         $moneyCol = 'BJ';
@@ -390,20 +394,28 @@ class PoaExcelService
             $formula12 = "=IFERROR(AVERAGE({$col}{$startP}:{$col}{$endP}), 0)";
             $this->sheet->setCellValue("{$col}{$row12}", $formula12);
             
-            // Fila 11: 80/20 Rule
-            if ($startU > 0 && $endU >= $startU) {
-                // 80% de Fila 12 (Planificadas) + 20% del promedio de No Planificadas
-                // Calcula el promedio real de las actividades no planificadas y aplica el peso 20%
-                // MIN(..., 1) limita el promedio a un máximo de 1.0 (100%) para evitar valores como 2300%
-                $formula11 = "={$col}{$row12}*0.8 + MIN(IFERROR(AVERAGE({$col}{$startU}:{$col}{$endU}), 0), 1)*0.2";
+            // Fila 11: Regla 80/20 con IF
+            if ($startU > 0 && $endU >= $startU && $unplannedHeaderRow > 0) {
+                // Si la cabecera de no planificadas es "100%", aplica 80/20
+                // Si no es "100%", usa directamente el valor de Fila 12
+                $hr = $unplannedHeaderRow;
+                $formula11 = "=IF({$col}{$hr}=\"100%\",(({$col}{$row12}*0.8)+({$col}{$hr}*0.2)),{$col}{$row12})";
             } else {
-                // 100% de Fila 12
+                // Sin no planificadas: 100% de Fila 12
                 $formula11 = "={$col}{$row12}";
             }
             $this->sheet->setCellValue("{$col}{$row11}", $formula11);
         }
 
-        // 2. Columna de Recursos (Suma)
+        // 2. Fórmulas COUNTIF en la fila cabecera de no planificadas
+        if ($startU > 0 && $endU >= $startU && $unplannedHeaderRow > 0) {
+            foreach ($percentCols as $col) {
+                $formulaHeader = "=IF(COUNTIF({$col}{$startU}:{$col}{$endU},\"100%\")>0,\"100%\",\"VALORES NO COLOCADOS\")";
+                $this->sheet->setCellValue("{$col}{$unplannedHeaderRow}", $formulaHeader);
+            }
+        }
+
+        // 3. Columna de Recursos (Suma)
         if ($startU > 0 && $endU > 0) {
             $formulaMoney = "=IFERROR(SUM({$moneyCol}{$startP}:{$moneyCol}{$endP}) + SUM({$moneyCol}{$startU}:{$moneyCol}{$endU}), 0)";
         } else {

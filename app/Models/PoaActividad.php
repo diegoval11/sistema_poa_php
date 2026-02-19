@@ -31,7 +31,7 @@ class PoaActividad extends Model
         'es_cuantificable' => 'boolean',
         'es_no_planificada' => 'boolean',
         'cantidad_programada_total' => 'integer', // CORRECCIÓN: Ahora es integer en BD
-        'costo_estimado' => 'decimal:2', // Asegura precisión monetaria
+        'costo_estimado' => 'decimal:2', // Asegura la precision monetaria. decimal
     ];
 
     protected $touches = ['meta'];
