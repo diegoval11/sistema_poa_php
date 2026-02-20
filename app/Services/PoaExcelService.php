@@ -329,15 +329,22 @@ class PoaExcelService
             }
             $this->sheet->setCellValue("{$colR}{$fila}", $valR);
             
-            // Medio de Verificación: Solo mostrar en meses con ejecución (realizado > 0)
-            $mostrarMV = false;
-            if (!empty($actividad->medio_verificacion)) {
-                if ($cantR > 0) {
-                    $mostrarMV = true;
+            // Medio de Verificación / Causal de Incumplimiento
+            $textoMostrar = null;
+            if ($cantR > 0) {
+                // Si hizo algo, se ignora el causal y se toma la verificación
+                if (!empty($actividad->medio_verificacion)) {
+                    $textoMostrar = $actividad->medio_verificacion;
+                }
+            } elseif ($cantP > 0 && $cantR == 0) {
+                // Si programó pero no hizo nada, y hay un causal guardado, se muestra el causal
+                if (!empty($prog) && !empty($prog->causal_desvio)) {
+                    $textoMostrar = $prog->causal_desvio;
                 }
             }
-            if ($mostrarMV) {
-                $this->sheet->setCellValue("{$colVerif}{$fila}", $actividad->medio_verificacion);
+
+            if ($textoMostrar) {
+                $this->sheet->setCellValue("{$colVerif}{$fila}", $textoMostrar);
             }
             
             $col += 4; // Siguiente mes

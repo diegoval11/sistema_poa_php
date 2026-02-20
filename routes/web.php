@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('poa/avances')->name('poa.avances.')->group(function () {
             Route::get('/{proyectoId}', [\App\Http\Controllers\Poa\AvanceController::class, 'index'])->name('index');
             Route::post('/update', [\App\Http\Controllers\Poa\AvanceController::class, 'update'])->name('update');
+            Route::post('/update-causal', [\App\Http\Controllers\Poa\AvanceController::class, 'updateCausal'])->name('update_causal');
             Route::post('/store-evidencia', [\App\Http\Controllers\Poa\AvanceController::class, 'storeEvidencia'])->name('store_evidencia');
             Route::get('/evidencias-mes/{actividadId}/{mes}', [\App\Http\Controllers\Poa\AvanceController::class, 'getEvidencias'])->name('get_evidencias');
         });

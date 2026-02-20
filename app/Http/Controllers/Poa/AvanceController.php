@@ -158,4 +158,24 @@ class AvanceController extends Controller
             })
         ]);
     }
+    public function updateCausal(Request $request)
+    {
+        $request->validate([
+            'programacion_id' => 'required|exists:poa_programaciones,id',
+            'causal_desvio' => 'nullable|string|max:1000',
+        ]);
+
+        $programacion = PoaProgramacion::with('actividad.meta.proyecto')->findOrFail($request->programacion_id);
+
+        if ($programacion->actividad->meta->proyecto->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $programacion->update([
+            'causal_desvio' => $request->causal_desvio
+        ]);
+
+        $mensaje = $request->filled('causal_desvio') ? 'Causal guardada correctamente.' : 'Causal de incumplimiento eliminada.';
+        return back()->with('success', $mensaje);
+    }
 }

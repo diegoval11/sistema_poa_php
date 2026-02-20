@@ -150,6 +150,17 @@
                                             <span class="px-2 py-0.5 rounded text-[10px] font-black border {{ $badgeClass }}">
                                                 {{ $estado }}
                                             </span>
+                                            @if($prog->cantidad_programada > 0 && $prog->cantidad_ejecutada == 0)
+                                                <div class="mt-2" title="{{ !empty($prog->causal_desvio) ? 'Editar Causal' : 'Añadir Causal de Incumplimiento' }}">
+                                                    <button type="button" 
+                                                            onclick="openCausalModal({{ $prog->id }}, '{{ addslashes($prog->causal_desvio) }}', {{ $prog->mes }}, '{{ $meses[$prog->mes] }}')"
+                                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full {{ !empty($prog->causal_desvio) ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600' }} text-white shadow-sm transition-colors cursor-pointer">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <button onclick="openEvidenciaModal({{ $actividad->id }}, {{ $prog->mes }}, '{{ $meses[$prog->mes] }}')" 
@@ -250,6 +261,43 @@
     </form>
 </dialog>
 
+{{-- MODAL CAUSAL DE INCUMPLIMIENTO --}}
+<dialog id="modal_causal" class="modal">
+    <div class="modal-box w-11/12 max-w-lg bg-white rounded-2xl p-0 overflow-hidden shadow-2xl">
+        <div class="bg-gray-900 px-8 py-6 flex justify-between items-center">
+            <div>
+                <h3 class="text-white font-black text-lg uppercase tracking-widest">Causal de Incumplimiento</h3>
+                <p class="text-gray-400 text-xs font-bold mt-1">Mes: <span id="modal_causal_mes" class="text-white"></span></p>
+            </div>
+            <form method="dialog">
+                <button class="text-gray-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </form>
+        </div>
+
+        <div class="p-8">
+            <form action="{{ route('poa.avances.update_causal') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="programacion_id" id="modal_causal_prog_id">
+                
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Justificación del Incumplimiento</label>
+                    <textarea name="causal_desvio" id="modal_causal_texto" rows="4" class="w-full border-gray-200 rounded-lg text-xs font-bold focus:ring-black focus:border-black" placeholder="Describa el motivo por el cual no se ejecutó la actividad..."></textarea>
+                    <p class="text-[10px] text-gray-500 mt-1 italic">Si deja este campo vacío, se eliminará el causal guardado.</p>
+                </div>
+
+                <button type="submit" class="w-full bg-orange-500 text-white font-black py-3 rounded-lg text-xs uppercase tracking-widest hover:bg-orange-600 transition-all active:scale-95 shadow-lg">
+                    Guardar Causal
+                </button>
+            </form>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+        <button>close</button>
+    </form>
+</dialog>
+
 @push('scripts')
 <script>
     function toggleActividad(index) {
@@ -301,6 +349,14 @@
                     </div>
                 `).join('');
             });
+    }
+
+    function openCausalModal(progId, causalTexto, mes, mesNombre) {
+        const modal = document.getElementById('modal_causal');
+        document.getElementById('modal_causal_prog_id').value = progId;
+        document.getElementById('modal_causal_texto').value = causalTexto;
+        document.getElementById('modal_causal_mes').textContent = mesNombre;
+        modal.showModal();
     }
 </script>
 @endpush
