@@ -329,14 +329,10 @@ class PoaExcelService
             }
             $this->sheet->setCellValue("{$colR}{$fila}", $valR);
             
-            // Medio de Verificación: Solo mostrar en meses con actividad relevante
-            // Planificadas: solo si tiene programación en ese mes
-            // No planificadas: solo si tiene ejecución en ese mes
+            // Medio de Verificación: Solo mostrar en meses con ejecución (realizado > 0)
             $mostrarMV = false;
             if (!empty($actividad->medio_verificacion)) {
-                if ($esPlanificada && $cantP > 0) {
-                    $mostrarMV = true;
-                } elseif (!$esPlanificada && $cantR > 0) {
+                if ($cantR > 0) {
                     $mostrarMV = true;
                 }
             }
@@ -397,7 +393,6 @@ class PoaExcelService
             // Fila 11: Regla 80/20 con IF
             if ($startU > 0 && $endU >= $startU && $unplannedHeaderRow > 0) {
                 // Si la cabecera de no planificadas es "100%", aplica 80/20
-                // Si no es "100%", usa directamente el valor de Fila 12
                 $hr = $unplannedHeaderRow;
                 $formula11 = "=IF({$col}{$hr}=\"100%\",(({$col}{$row12}*0.8)+({$col}{$hr}*0.2)),{$col}{$row12})";
             } else {
@@ -407,10 +402,14 @@ class PoaExcelService
             $this->sheet->setCellValue("{$col}{$row11}", $formula11);
         }
 
-        // 2. Fórmulas COUNTIF en la fila cabecera de no planificadas
+        // 2. Fórmulas de coincidencia en la fila cabecera de no planificadas
+        // BUG FIX: Se usa ISNUMBER(MATCH) en lugar de COUNTIF.
+        // ¿Por qué? PhpSpreadsheet (la librería PHP) tiene un bug calculando COUNTIF sobre cadenas 
+        // de texto generadas por otras fórmulas ("100%"). Cachea el valor por defecto y Excel no lo 
+        // recalcula hasta que le das doble clic. MATCH sí es calculado correctamente por PHP.
         if ($startU > 0 && $endU >= $startU && $unplannedHeaderRow > 0) {
             foreach ($percentCols as $col) {
-                $formulaHeader = "=IF(COUNTIF({$col}{$startU}:{$col}{$endU},\"100%\")>0,\"100%\",\"VALORES NO COLOCADOS\")";
+                $formulaHeader = "=IF(ISNUMBER(MATCH(\"100%\",{$col}{$startU}:{$col}{$endU},0)),\"100%\",\"VALORES NO COLOCADOS\")";
                 $this->sheet->setCellValue("{$col}{$unplannedHeaderRow}", $formulaHeader);
             }
         }
