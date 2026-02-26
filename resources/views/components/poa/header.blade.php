@@ -49,9 +49,24 @@
                         {{ Auth::user()->email ?? 'Usuario' }}
                     </li>
                     <li>
-                        <form method="POST" action="{{ route('logout') }}">
+                        {{-- display:contents elimina el <form> del flujo de layout sin afectar el DOM,
+                             dejando al <button> como hijo directo del <li> para que DaisyUI
+                             aplique correctamente todo el área clicable del ítem de menú. --}}
+                        <form method="POST" action="{{ route('logout') }}" id="logout-form-header" style="display: contents;">
                             @csrf
-                            <button type="submit" class="w-full text-left text-error font-bold">Cerrar Sesión</button>
+                            <button
+                                type="submit"
+                                class="text-error font-bold"
+                                onclick="
+                                    var btn = this;
+                                    if (btn.disabled) return false;
+                                    btn.disabled = true;
+                                    btn.innerHTML = '<span class=\'loading loading-spinner loading-xs\'></span> Cerrando…';
+                                    btn.classList.add('opacity-60', 'cursor-not-allowed');
+                                    btn.closest('form').submit();
+                                    return false;
+                                "
+                            >Cerrar Sesión</button>
                         </form>
                     </li>
                 </ul>

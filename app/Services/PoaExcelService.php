@@ -45,11 +45,16 @@ class PoaExcelService
         $rangeU_Start = 0;
         $rangeU_End = 0;
         
-        // Process unplanned activities if they exist.
         // The unplanned template position shifts due to the inserted planned activities.
         $currentUnplanTemplate = $this->templateRowNoPlanificadas + $totalPlanificadas;
         
-        if ($proyectoNoPlanificado) {
+        // Guard: only process unplanned activities if the project exists AND contains
+        // at least one real activity. An empty project would produce a ghost row because
+        // the unplanned template row is never populated but also never removed.
+        $tieneActividadesNoPlanificadas = $proyectoNoPlanificado
+            && $proyectoNoPlanificado->metas->flatMap->actividades->isNotEmpty();
+
+        if ($tieneActividadesNoPlanificadas) {
             $this->currentRow = $currentUnplanTemplate + 1;
             $rangeU_Start = $this->currentRow;
             
@@ -60,18 +65,23 @@ class PoaExcelService
             $totalUnplannedActivities = 0;
         }
         
-        // Final cleanup: Remove original template rows
+        // Final cleanup: Remove original template rows (both planned and unplanned).
+        // The unplanned template must ALWAYS be removed to prevent the ghost row.
+        // Remove unplanned template first (it has a higher row number), then planned,
+        // to avoid invalidating the planned template's row index.
+        $this->sheet->removeRow($currentUnplanTemplate, 1);
         $this->sheet->removeRow($this->templateRowPlanificadas, 1);
         
-        // Adjust planned ranges (shifted up by 1)
+        // Adjust planned ranges (shifted up by 1 due to planned template removal)
         $rangeP_Start -= 1;
         $rangeP_End -= 1;
         
-        // Keep unplanned header row (contains COUNTIF summary formulas)
-        // Only adjust ranges for the single planned template row removal
-        $rangeU_Start -= 1;
-        $rangeU_End -= 1;
-        $unplannedHeaderRow = $currentUnplanTemplate - 1; // Header row with COUNTIF
+        // Adjust unplanned ranges:
+        // - Shifted up by 1 for the unplanned template removal (higher row index, removed first)
+        // - Shifted up by 1 more for the planned template removal
+        $rangeU_Start -= 2;
+        $rangeU_End -= 2;
+        $unplannedHeaderRow = $currentUnplanTemplate - 2; // Header row with COUNTIF (adjusted for both removals)
         
         // Update summary formulas with the valid ranges
         $this->updateSummaryFormulas($rangeP_Start, $rangeP_End, $rangeU_Start, $rangeU_End, $totalUnplannedActivities, $unplannedHeaderRow);

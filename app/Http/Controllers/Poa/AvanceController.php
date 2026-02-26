@@ -93,6 +93,16 @@ class AvanceController extends Controller
             abort(403);
         }
 
+        // Para actividades planificadas (programado > 0), el realizado no puede superar el programado.
+        // Las actividades no planificadas (programado == 0) están exentas de esta restricción.
+        $esPlanificada = !$programacion->actividad->es_no_planificada;
+        if ($esPlanificada && $programacion->cantidad_programada > 0
+            && (int)$request->cantidad_ejecutada > $programacion->cantidad_programada) {
+            return back()->withErrors([
+                'cantidad_ejecutada' => "El realizado ({$request->cantidad_ejecutada}) no puede superar el programado ({$programacion->cantidad_programada}).",
+            ])->withInput();
+        }
+
         $programacion->update([
             'cantidad_ejecutada' => (int)$request->cantidad_ejecutada
         ]);

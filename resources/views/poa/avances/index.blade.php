@@ -114,13 +114,18 @@
                                     @php
                                         $meses = [1=>'Enero', 2=>'Febrero', 3=>'Marzo', 4=>'Abril', 5=>'Mayo', 6=>'Junio', 7=>'Julio', 8=>'Agosto', 9=>'Septiembre', 10=>'Octubre', 11=>'Noviembre', 12=>'Diciembre'];
                                         
-                                        // Determinar estado según las nuevas reglas
+                                        // Determinar estado según las nuevas reglas.
+                                        // El badge "No Planificada" solo aplica a actividades no planificadas
+                                        // (programado == 0 pero ejecutado > 0).
+                                        // En actividades planificadas, el realizado nunca puede superar el programado.
                                         if ($prog->cantidad_programada == 0) {
-                                            $estado = 'NO APLICA';
-                                            $badgeClass = 'bg-gray-50 text-gray-400 border-gray-200';
-                                        } elseif ($prog->cantidad_ejecutada > $prog->cantidad_programada) {
-                                            $estado = 'No Planificada';
-                                            $badgeClass = 'bg-orange-100 text-orange-700 border-orange-200';
+                                            if ($actividad->es_no_planificada && $prog->cantidad_ejecutada > 0) {
+                                                $estado = 'No Planificada';
+                                                $badgeClass = 'bg-orange-100 text-orange-700 border-orange-200';
+                                            } else {
+                                                $estado = 'NO APLICA';
+                                                $badgeClass = 'bg-gray-50 text-gray-400 border-gray-200';
+                                            }
                                         } elseif ($prog->cantidad_ejecutada >= $prog->cantidad_programada) {
                                             $estado = 'CUMPLIDO';
                                             $badgeClass = 'bg-gray-900 text-white border-gray-900';
@@ -138,12 +143,24 @@
                                         <td class="px-6 py-4 font-bold text-gray-700">{{ $meses[$prog->mes] }}</td>
                                         <td class="px-6 py-4 text-center font-black text-gray-400">{{ $prog->cantidad_programada + 0 }}</td>
                                         <td class="px-6 py-4 text-center">
-                                            <form action="{{ route('poa.avances.update') }}" method="POST" class="inline-block">
+                                            <form action="{{ route('poa.avances.update') }}" method="POST" class="inline-block avance-form">
                                                 @csrf
                                                 <input type="hidden" name="programacion_id" value="{{ $prog->id }}">
-                                                <input type="number" name="cantidad_ejecutada" value="{{ $prog->cantidad_ejecutada + 0 }}" 
-                                                       class="w-20 text-center border-gray-300 rounded text-xs font-bold focus:ring-black focus:border-black shadow-sm"
-                                                       min="0" step="1">
+                                                <div class="flex flex-col items-center gap-1">
+                                                    <input type="number" name="cantidad_ejecutada"
+                                                           value="{{ $prog->cantidad_ejecutada + 0 }}"
+                                                           class="w-20 text-center border-gray-300 rounded text-xs font-bold focus:ring-black focus:border-black shadow-sm avance-input"
+                                                           min="0" step="1"
+                                                           @if(!$actividad->es_no_planificada && $prog->cantidad_programada > 0)
+                                                               max="{{ $prog->cantidad_programada }}"
+                                                           @endif
+                                                           data-programado="{{ $prog->cantidad_programada }}"
+                                                           data-planificada="{{ $actividad->es_no_planificada ? '0' : '1' }}">
+                                                    {{-- Alerta inline: visible solo cuando realizado > programado en planificadas --}}
+                                                    <span class="avance-alert hidden text-[9px] font-black text-red-600 leading-tight text-center max-w-[90px]">
+                                                        Máx. {{ $prog->cantidad_programada }}
+                                                    </span>
+                                                </div>
                                             </form>
                                         </td>
                                         <td class="px-6 py-4 text-center">
@@ -172,7 +189,7 @@
                                             </button>
                                         </td>
                                         <td class="px-6 py-4 text-center">
-                                            <button onclick="this.closest('tr').querySelector('form').submit()" 
+                                            <button onclick="submitAvance(this)" 
                                                     class="bg-gray-900 text-white px-3 py-1 rounded text-[10px] font-black hover:bg-black transition-colors uppercase tracking-widest">
                                                 Guardar
                                             </button>
@@ -312,6 +329,51 @@
             arrow.classList.remove('rotate-180');
         }
     }
+
+    /**
+     * Valida que el realizado no supere el programado en actividades planificadas
+     * antes de enviar el formulario. Muestra una alerta inline si se detecta la violación.
+     */
+    function submitAvance(btn) {
+        const form  = btn.closest('tr').querySelector('form.avance-form');
+        const input = form.querySelector('input.avance-input');
+        const alert = form.querySelector('span.avance-alert');
+
+        const esPlanificada = input.dataset.planificada === '1';
+        const programado    = parseInt(input.dataset.programado, 10);
+        const realizado     = parseInt(input.value, 10);
+
+        // Solo validar actividades planificadas con programado > 0
+        if (esPlanificada && programado > 0 && realizado > programado) {
+            // Mostrar alerta inline y marcar el input con borde rojo
+            alert.classList.remove('hidden');
+            input.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+            input.focus();
+            return; // Bloquear el submit
+        }
+
+        // Todo OK: limpiar posible alerta anterior y enviar
+        alert.classList.add('hidden');
+        input.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+        form.submit();
+    }
+
+    // Limpiar alerta en tiempo real mientras el usuario corrige el valor
+    document.addEventListener('input', function(e) {
+        if (!e.target.classList.contains('avance-input')) return;
+        const input = e.target;
+        const alert = input.closest('div')?.querySelector('span.avance-alert');
+        if (!alert) return;
+
+        const esPlanificada = input.dataset.planificada === '1';
+        const programado    = parseInt(input.dataset.programado, 10);
+        const realizado     = parseInt(input.value, 10);
+
+        if (!esPlanificada || programado <= 0 || realizado <= programado) {
+            alert.classList.add('hidden');
+            input.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+        }
+    });
 
     function openEvidenciaModal(actividadId, mes, mesNombre) {
         const modal = document.getElementById('modal_evidencia');

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Sistema POA — Documentación
+Comment=Abre la documentación técnica del Sistema POA en el navegador
+Exec=bash /home/paladin/Desktop/work/alcaldia-2.0/sistema-poa/ver_documentacion.sh
+Icon=help-browser
+Terminal=true
+Categories=Development;Documentation;
+StartupNotify=false
