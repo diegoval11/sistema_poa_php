@@ -484,6 +484,10 @@
         })
         .then(res => res.json())
         .then(data => {
+            // Restaurar el botón ANTES de cerrar para que esté listo en el próximo uso
+            btn.disabled = false;
+            btn.textContent = 'Sí, eliminar';
+
             document.getElementById('modal_confirm_delete').close();
             _deleteEvidenciaId = null;
 
