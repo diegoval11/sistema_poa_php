@@ -2,7 +2,7 @@
     @forelse ($unidades as $unidad)
     <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
         <div class="card-body">
-            <h2 class="card-title text-congress-blue-700">{{ $unidad->unidad->nombre }}</h2>
+            <h2 class="card-title text-congress-blue-700">{{ $unidad->unidad?->nombre ?? 'Sin nombre' }}</h2>
             <p class="text-sm text-gray-500">{{ $unidad->email }}</p>
             
             <div class="stats stats-vertical shadow mt-4">

@@ -19,7 +19,10 @@ class UnidadController extends Controller
         $busqueda = $request->get('buscar', '');
         
         // Eager load relationships with depth to optimize performance and avoid N+1 issues when iterating projects.
+        // whereHas('unidad') ensures only users with a complete unidad record are listed,
+        // preventing ErrorException when the relation is null (e.g. users created without going through the registration flow).
         $query = User::where('role', 'unidad')
+            ->whereHas('unidad')
             ->with(['unidad', 'proyectos' => function($q) {
                 $q->where('estado', 'APROBADO')
                   ->with('metas.actividades.programaciones');
