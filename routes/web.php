@@ -102,6 +102,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/update-causal', [\App\Http\Controllers\Poa\AvanceController::class, 'updateCausal'])->name('update_causal');
             Route::post('/store-evidencia', [\App\Http\Controllers\Poa\AvanceController::class, 'storeEvidencia'])->name('store_evidencia');
             Route::get('/evidencias-mes/{actividadId}/{mes}', [\App\Http\Controllers\Poa\AvanceController::class, 'getEvidencias'])->name('get_evidencias');
+            Route::delete('/evidencia/{id}', [\App\Http\Controllers\Poa\AvanceController::class, 'destroyEvidencia'])->name('destroy_evidencia');
         });
 
         // Wizard

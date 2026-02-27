@@ -8,6 +8,7 @@ use App\Models\PoaProgramacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AvanceController extends Controller
 {
@@ -187,5 +188,24 @@ class AvanceController extends Controller
 
         $mensaje = $request->filled('causal_desvio') ? 'Causal guardada correctamente.' : 'Causal de incumplimiento eliminada.';
         return back()->with('success', $mensaje);
+    }
+
+    public function destroyEvidencia($id)
+    {
+        $evidencia = \App\Models\PoaEvidencia::with('actividad.meta.proyecto')->findOrFail($id);
+
+        // Verificar que la evidencia pertenece al usuario autenticado
+        if ($evidencia->actividad->meta->proyecto->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Eliminar el archivo físico del storage si existe
+        if ($evidencia->archivo) {
+            Storage::disk('public')->delete($evidencia->archivo);
+        }
+
+        $evidencia->delete();
+
+        return response()->json(['success' => true, 'message' => 'Evidencia eliminada correctamente.']);
     }
 }

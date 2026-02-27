@@ -315,6 +315,31 @@
     </form>
 </dialog>
 
+{{-- MODAL DE CONFIRMACIÓN BORRAR EVIDENCIA --}}
+<dialog id="modal_confirm_delete" class="modal">
+    <div class="modal-box w-11/12 max-w-sm bg-white rounded-2xl p-0 overflow-hidden shadow-2xl">
+        <div class="bg-red-600 px-8 py-6">
+            <h3 class="text-white font-black text-lg uppercase tracking-widest">Eliminar Evidencia</h3>
+        </div>
+        <div class="p-8">
+            <p class="text-gray-700 text-sm font-bold mb-6">¿Estás seguro de que deseas eliminar esta evidencia? Esta acción <span class="text-red-600">no se puede deshacer</span>.</p>
+            <div class="flex gap-3">
+                <button onclick="cancelDeleteEvidencia()"
+                        class="flex-1 border border-gray-300 text-gray-700 font-black py-3 rounded-lg text-xs uppercase tracking-widest hover:bg-gray-50 transition-all">
+                    Cancelar
+                </button>
+                <button id="btn_confirm_delete" onclick="executeDeleteEvidencia()"
+                        class="flex-1 bg-red-600 text-white font-black py-3 rounded-lg text-xs uppercase tracking-widest hover:bg-red-700 transition-all active:scale-95 shadow-lg">
+                    Sí, eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+        <button>close</button>
+    </form>
+</dialog>
+
 @push('scripts')
 <script>
     function toggleActividad(index) {
@@ -405,9 +430,15 @@
                                 <p class="text-[8px] text-gray-400 font-bold uppercase">${ev.fecha_subida}</p>
                             </div>
                         </div>
-                        <a href="${ev.url || ev.archivo}" target="_blank" class="text-gray-400 hover:text-black transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                        </a>
+                        <div class="flex items-center gap-2">
+                            ${(ev.url || ev.archivo) ? `<a href="${ev.url || ev.archivo}" target="_blank" class="text-gray-400 hover:text-black transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            </a>` : ''}
+                            <button onclick="confirmDeleteEvidencia(${ev.id})" title="Eliminar evidencia"
+                                    class="w-6 h-6 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-600 text-red-500 hover:text-white transition-all" >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
                     </div>
                 `).join('');
             });
@@ -419,6 +450,54 @@
         document.getElementById('modal_causal_texto').value = causalTexto;
         document.getElementById('modal_causal_mes').textContent = mesNombre;
         modal.showModal();
+    }
+
+    // ---- DELETE EVIDENCIA ----
+    let _deleteEvidenciaId   = null;
+    let _deleteActividadId   = null;
+    let _deleteMes           = null;
+    let _deleteMesNombre     = null;
+
+    function confirmDeleteEvidencia(evidenciaId) {
+        _deleteEvidenciaId = evidenciaId;
+        document.getElementById('modal_confirm_delete').showModal();
+    }
+
+    function cancelDeleteEvidencia() {
+        _deleteEvidenciaId = null;
+        document.getElementById('modal_confirm_delete').close();
+    }
+
+    function executeDeleteEvidencia() {
+        if (!_deleteEvidenciaId) return;
+
+        const btn = document.getElementById('btn_confirm_delete');
+        btn.disabled = true;
+        btn.textContent = 'Eliminando...';
+
+        fetch(`/poa/avances/evidencia/${_deleteEvidenciaId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('modal_confirm_delete').close();
+            _deleteEvidenciaId = null;
+
+            // Refrescar la lista de evidencias en el modal abierto
+            const actividadId = document.getElementById('modal_actividad_id').value;
+            const mes         = document.getElementById('modal_mes_input').value;
+            const mesNombre   = document.getElementById('modal_mes_nombre').textContent;
+            openEvidenciaModal(actividadId, mes, mesNombre);
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.textContent = 'Sí, eliminar';
+            alert('Error al eliminar la evidencia. Intente nuevamente.');
+        });
     }
 </script>
 @endpush
