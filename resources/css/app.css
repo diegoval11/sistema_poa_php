@@ -1,3 +1,445 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =========================================================
+   DARK MODE OVERRIDES
+   Se activa cuando DaisyUI establece data-theme="dark" en <html>.
+   Cubre colores hardcodeados de Tailwind usados en todas las vistas.
+   ========================================================= */
+
+/* ── Body / Fondo principal ─────────────────────────────── */
+[data-theme="dark"] body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+
+/* ── DaisyUI botones semánticos — colores corregidos en dark mode ── */
+/*
+   DaisyUI dark theme aplica colores oklch pastel a btn-success/error/info/warning.
+   Los sobrescribimos con colores saturados y oscuros apropiados.
+*/
+[data-theme="dark"] .btn-success {
+    background-color: #16a34a !important;
+    /* green-600 */
+    border-color: #16a34a !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-success:hover {
+    background-color: #15803d !important;
+    /* green-700 */
+    border-color: #15803d !important;
+}
+
+[data-theme="dark"] .btn-error {
+    background-color: #dc2626 !important;
+    /* red-600 */
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-error:hover {
+    background-color: #b91c1c !important;
+    /* red-700 */
+    border-color: #b91c1c !important;
+}
+
+[data-theme="dark"] .btn-warning {
+    background-color: #d97706 !important;
+    /* amber-600 */
+    border-color: #d97706 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-warning:hover {
+    background-color: #b45309 !important;
+    border-color: #b45309 !important;
+}
+
+[data-theme="dark"] .btn-info {
+    background-color: #0284c7 !important;
+    /* sky-600 */
+    border-color: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-info:hover {
+    background-color: #0369a1 !important;
+    border-color: #0369a1 !important;
+}
+
+
+/* ── Fondos blancos / grises claros ─────────────────────── */
+[data-theme="dark"] .bg-white {
+    background-color: #1e293b !important;
+}
+
+[data-theme="dark"] .bg-slate-50,
+[data-theme="dark"] .bg-gray-50 {
+    background-color: #0f172a !important;
+}
+
+/* Tailwind bg-X/opacity variants usados en wizard (e.g. bg-gray-50/30, bg-gray-50/50) */
+[data-theme="dark"] .bg-gray-50\/30,
+[data-theme="dark"] .bg-gray-50\/50 {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+}
+
+/* Variantes de gradiente from-gray / to-gray (wizard step4 headers) */
+[data-theme="dark"] .from-gray-50 {
+    --tw-gradient-from: #1e293b !important;
+}
+
+[data-theme="dark"] .to-gray-100 {
+    --tw-gradient-to: #334155 !important;
+}
+
+[data-theme="dark"] .from-gray-100 {
+    --tw-gradient-from: #334155 !important;
+}
+
+[data-theme="dark"] .to-gray-50 {
+    --tw-gradient-to: #1e293b !important;
+}
+
+
+
+[data-theme="dark"] .bg-gray-100 {
+    background-color: #1e293b !important;
+}
+
+[data-theme="dark"] .bg-gray-200 {
+    background-color: #334155 !important;
+}
+
+/* ── Fondos de iconos de colores (muy claros) ───────────── */
+[data-theme="dark"] .bg-congress-blue-50 {
+    background-color: #1e3a5f !important;
+}
+
+[data-theme="dark"] .bg-blue-50 {
+    background-color: #172554 !important;
+}
+
+[data-theme="dark"] .bg-green-50 {
+    background-color: #14532d !important;
+}
+
+[data-theme="dark"] .bg-orange-50 {
+    background-color: #431407 !important;
+}
+
+[data-theme="dark"] .bg-purple-50 {
+    background-color: #3b0764 !important;
+}
+
+[data-theme="dark"] .bg-teal-50 {
+    background-color: #042f2e !important;
+}
+
+[data-theme="dark"] .bg-red-50 {
+    background-color: #450a0a !important;
+}
+
+[data-theme="dark"] .bg-indigo-50 {
+    background-color: #1e1b4b !important;
+}
+
+[data-theme="dark"] .bg-congress-blue-100 {
+    background-color: #1e3a5f !important;
+}
+
+/* ── Fondos de badges de estado ─────────────────────────── */
+[data-theme="dark"] .bg-green-100 {
+    background-color: #166534 !important;
+}
+
+[data-theme="dark"] .bg-orange-100 {
+    background-color: #7c2d12 !important;
+}
+
+/* ── Fondos de estado "bloqueado" (slate-100) ───────────── */
+[data-theme="dark"] .bg-slate-100 {
+    background-color: #1e293b !important;
+}
+
+[data-theme="dark"] .border-slate-200 {
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .text-slate-500 {
+    color: #94a3b8 !important;
+}
+
+/* ── Banner del panel avanzado (congress-blue-50 / blue-50) */
+[data-theme="dark"] .from-congress-blue-50 {
+    --tw-gradient-from: #1e3a5f !important;
+}
+
+[data-theme="dark"] .to-blue-50 {
+    --tw-gradient-to: #172554 !important;
+}
+
+[data-theme="dark"] .border-congress-blue-100 {
+    border-color: #1e3a5f !important;
+}
+
+/* ── Textos oscuros → claros ────────────────────────────── */
+[data-theme="dark"] .text-gray-900,
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-slate-800 {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .text-gray-700 {
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .text-gray-600 {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .text-gray-500,
+[data-theme="dark"] .text-gray-400 {
+    color: #64748b !important;
+}
+
+[data-theme="dark"] .text-gray-300 {
+    color: #475569 !important;
+}
+
+/* Texto de congress-blue en encabezados */
+[data-theme="dark"] .text-congress-blue-900 {
+    color: #93c5fd !important;
+}
+
+[data-theme="dark"] .text-congress-blue-700 {
+    color: #60a5fa !important;
+}
+
+/* Badges de texto sobre fondos oscuros */
+[data-theme="dark"] .text-green-700 {
+    color: #86efac !important;
+}
+
+[data-theme="dark"] .text-orange-700 {
+    color: #fdba74 !important;
+}
+
+/* ── Bordes ─────────────────────────────────────────────── */
+[data-theme="dark"] .border-gray-200,
+[data-theme="dark"] .border-gray-100 {
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .border-gray-300 {
+    border-color: #475569 !important;
+}
+
+[data-theme="dark"] .divide-gray-100>*+* {
+    border-color: #334155 !important;
+}
+
+/* Bordes de colores en cards del panel avanzado */
+[data-theme="dark"] .border-blue-100 {
+    border-color: #1e3a8a !important;
+}
+
+[data-theme="dark"] .border-blue-200 {
+    border-color: #1e40af !important;
+}
+
+[data-theme="dark"] .border-purple-100 {
+    border-color: #4c1d95 !important;
+}
+
+[data-theme="dark"] .border-orange-100 {
+    border-color: #7c2d12 !important;
+}
+
+[data-theme="dark"] .border-green-100 {
+    border-color: #166534 !important;
+}
+
+[data-theme="dark"] .border-teal-100 {
+    border-color: #134e4a !important;
+}
+
+[data-theme="dark"] .border-red-100 {
+    border-color: #450a0a !important;
+}
+
+[data-theme="dark"] .border-red-200 {
+    border-color: #7f1d1d !important;
+}
+
+[data-theme="dark"] .border-indigo-100 {
+    border-color: #1e1b4b !important;
+}
+
+[data-theme="dark"] .border-indigo-200 {
+    border-color: #312e81 !important;
+}
+
+[data-theme="dark"] .border-congress-blue-200 {
+    border-color: #1e3a5f !important;
+}
+
+/* Divisor vertical entre botones */
+[data-theme="dark"] .bg-gray-200.w-px {
+    background-color: #475569 !important;
+}
+
+/* ── Inputs, Selects y Textareas ────────────────────────── */
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: #64748b !important;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+    border-color: #60a5fa !important;
+    outline-color: #60a5fa !important;
+}
+
+/* ── Hovers ─────────────────────────────────────────────── */
+[data-theme="dark"] .hover\:bg-gray-50:hover {
+    background-color: #334155 !important;
+}
+
+[data-theme="dark"] .hover\:bg-gray-100:hover {
+    background-color: #475569 !important;
+}
+
+[data-theme="dark"] .hover\:bg-red-100:hover {
+    background-color: #7f1d1d !important;
+}
+
+[data-theme="dark"] .hover\:bg-indigo-100:hover {
+    background-color: #312e81 !important;
+}
+
+[data-theme="dark"] .hover\:border-blue-300:hover {
+    border-color: #3b82f6 !important;
+}
+
+[data-theme="dark"] .hover\:border-purple-300:hover {
+    border-color: #a855f7 !important;
+}
+
+[data-theme="dark"] .hover\:border-orange-300:hover {
+    border-color: #f97316 !important;
+}
+
+[data-theme="dark"] .hover\:border-green-300:hover {
+    border-color: #22c55e !important;
+}
+
+[data-theme="dark"] .hover\:border-teal-300:hover {
+    border-color: #14b8a6 !important;
+}
+
+[data-theme="dark"] .hover\:border-congress-blue-200:hover {
+    border-color: #3b82f6 !important;
+}
+
+[data-theme="dark"] .hover\:border-red-200:hover {
+    border-color: #ef4444 !important;
+}
+
+[data-theme="dark"] .hover\:border-indigo-200:hover {
+    border-color: #6366f1 !important;
+}
+
+/* ── Sombra del botón "Crear Nuevo Proyecto" ────────────── */
+[data-theme="dark"] .shadow-congress-blue-200 {
+    --tw-shadow-color: rgba(30, 58, 95, 0.4) !important;
+    box-shadow: 0 4px 6px -1px var(--tw-shadow-color) !important;
+}
+
+/* ── Gradientes de encabezados de catalogos (rose/pink, indigo/purple) ── */
+[data-theme="dark"] .from-rose-50 {
+    --tw-gradient-from: #4c0519 !important;
+}
+
+[data-theme="dark"] .to-pink-50 {
+    --tw-gradient-to: #500724 !important;
+}
+
+[data-theme="dark"] .from-indigo-50 {
+    --tw-gradient-from: #1e1b4b !important;
+}
+
+[data-theme="dark"] .to-purple-50 {
+    --tw-gradient-to: #2e1065 !important;
+}
+
+[data-theme="dark"] .border-b.border-rose-100 {
+    border-color: #881337 !important;
+}
+
+[data-theme="dark"] .border-b.border-indigo-100 {
+    border-color: #312e81 !important;
+}
+
+/* Cancelar botón del modal (bg-gray-200 text-gray-700) */
+[data-theme="dark"] .bg-gray-200 {
+    background-color: #334155 !important;
+}
+
+[data-theme="dark"] .hover\:bg-gray-300:hover {
+    background-color: #475569 !important;
+}
+
+/* ── Proteger text-white en botones de color sólido ─────── */
+/*
+   DaisyUI aplica color: var(--bc) a .btn con alta especificidad.
+   Debemos incluir .btn en el selector para ganarle en la cascada.
+*/
+[data-theme="dark"] .btn.bg-green-600,
+[data-theme="dark"] .btn.bg-green-700,
+[data-theme="dark"] .btn.hover\:bg-green-700:hover,
+[data-theme="dark"] .btn.bg-red-600,
+[data-theme="dark"] .btn.bg-red-700,
+[data-theme="dark"] .btn.bg-rose-600,
+[data-theme="dark"] .btn.bg-rose-700,
+[data-theme="dark"] .btn.bg-indigo-600,
+[data-theme="dark"] .btn.bg-indigo-700,
+[data-theme="dark"] .btn.bg-blue-600,
+[data-theme="dark"] .btn.bg-blue-700,
+[data-theme="dark"] .btn.bg-emerald-600,
+[data-theme="dark"] .btn.bg-emerald-700,
+[data-theme="dark"] .btn.bg-congress-blue-600,
+[data-theme="dark"] .btn.bg-congress-blue-700,
+[data-theme="dark"] .btn.bg-purple-600,
+[data-theme="dark"] .btn.bg-purple-700 {
+    color: #ffffff !important;
+    --tw-text-opacity: 1;
+}
+
+/* Texto blanco explícito (class text-white) siempre prevalece */
+[data-theme="dark"] .text-white {
+    color: #ffffff !important;
+}
+
+/* Cualquier elemento con bg sólido de color + text-white juntos */
+[data-theme="dark"] .bg-green-600.text-white,
+[data-theme="dark"] .bg-red-600.text-white,
+[data-theme="dark"] .bg-rose-600.text-white,
+[data-theme="dark"] .bg-indigo-600.text-white,
+[data-theme="dark"] .bg-blue-600.text-white,
+[data-theme="dark"] .bg-emerald-600.text-white,
+[data-theme="dark"] .bg-congress-blue-600.text-white,
+[data-theme="dark"] .bg-purple-600.text-white {
+    color: #ffffff !important;
+}

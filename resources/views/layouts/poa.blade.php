@@ -7,6 +7,14 @@
 
     <title>{{ config('app.name', 'POA Alcaldía') }}</title>
 
+    {{-- Script anti-flash: aplica el tema ANTES del primer render --}}
+    <script>
+        (function() {
+            var theme = localStorage.getItem('poa-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-slate-50 text-slate-800">

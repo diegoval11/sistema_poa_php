@@ -50,13 +50,14 @@
                                             <div id="current-sum-{{ $actividad->id }}" class="text-lg font-mono font-bold text-gray-400">0</div>
                                         </div>
                                         <button type="button" 
-                                                class="btn btn-sm bg-congress-blue-600 hover:bg-congress-blue-700 text-white border-0 shadow-sm"
+                                                class="btn btn-sm bg-white hover:bg-congress-blue-50 text-congress-blue-600 border-2 border-congress-blue-400 hover:border-congress-blue-600 shadow-sm font-semibold gap-1 transition-all"
                                                 onclick="distributeEvenly({{ $actividad->id }}, {{ $actividad->cantidad_programada_total }})">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                             </svg>
-                                            Distribuir
+                                            Repartir Uniformemente
                                         </button>
+
                                     </div>
                                 </div>
 

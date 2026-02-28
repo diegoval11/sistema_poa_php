@@ -37,6 +37,28 @@
                 @endif
             </nav>
 
+            {{-- ── Botón Toggle Tema Claro/Oscuro ────────────────── --}}
+            <button
+                id="theme-toggle"
+                type="button"
+                title="Cambiar tema"
+                class="btn btn-ghost btn-circle text-white hover:bg-congress-blue-700 transition-all"
+            >
+                {{-- Ícono Sol (visible en modo claro) --}}
+                <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M12 3v1m0 16v1m8.66-9H20m-16 0H3m15.36-6.36-.71.71M6.34 17.66l-.71.71M17.66 17.66l-.71-.71M6.34 6.34l-.71-.71M12 7a5 5 0 100 10A5 5 0 0012 7z"/>
+                </svg>
+                {{-- Ícono Luna (visible en modo oscuro) --}}
+                <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+                </svg>
+            </button>
+
+            {{-- ── Dropdown Usuario ────────────────────────────────── --}}
             <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar online">
                     <div class="w-10 rounded-full border-2 border-congress-blue-400 bg-congress-blue-700 flex items-center justify-center text-white font-bold">
@@ -74,3 +96,34 @@
         </div>
     </div>
 </header>
+
+<script>
+(function () {
+    var btn     = document.getElementById('theme-toggle');
+    var sun     = document.getElementById('icon-sun');
+    var moon    = document.getElementById('icon-moon');
+    var html    = document.documentElement;
+    var STORAGE = 'poa-theme';
+
+    function applyTheme(theme) {
+        html.setAttribute('data-theme', theme);
+        localStorage.setItem(STORAGE, theme);
+        if (theme === 'dark') {
+            sun.classList.add('hidden');
+            moon.classList.remove('hidden');
+        } else {
+            moon.classList.add('hidden');
+            sun.classList.remove('hidden');
+        }
+    }
+
+    // Sincronizar ícono con el tema actual (ya aplicado por el script anti-flash)
+    applyTheme(localStorage.getItem(STORAGE) || 'light');
+
+    btn.addEventListener('click', function () {
+        var current = html.getAttribute('data-theme') || 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+})();
+</script>
+
